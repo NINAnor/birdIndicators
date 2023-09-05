@@ -11,15 +11,26 @@ library(lubridate)
 library(xtable)
 
 
-## Get the selected 71 species and years to be included in the report
-Species_info <- readRDS('data/ReportSpeciesPECBMS2020.rds')
+## Source all functions in "R" folder
+sourceDir <- function(path, trace = TRUE, ...) {
+  for (nm in list.files(path, pattern = "[.][RrSsQq]$")) {
+    if(trace) cat(nm,":")
+    source(file.path(path, nm), ...)
+    if(trace) cat("\n")
+  }
+}
+sourceDir('R')
 
-Spp_selection <- readRDS('data/PECBMS_species_list_2022.rds') %>%
-  tibble::as_tibble() %>%
-  dplyr::left_join(Species_info, by = "EURINGCode") %>%
-  dplyr::select(EURINGCode, Year_First, TCF_Basetime, TCF_Slope_From) %>%
-  dplyr::mutate(Stratum = 63)
-# 71 species - Ok!
+
+## Get the selected 71 species and years to be included in the report
+file_sppInfo_PECBMS <- "data/ReportSpeciesPECBMS2020.rds"
+file_sppList_PECBMS <- "data/PECBMS_species_list_2022.rds"
+
+Spp_selection <- listSpecies_PECBMS(file_sppInfo_PECBMS = file_sppInfo_PECBMS, 
+                                    file_sppList_PECBMS = file_sppList_PECBMS)
+
+
+#---
 
 ## As per JAK email -> We use Year_First from ReportSpeciesPECBMS2020 and
 ## set TCF_Slope_From as the same year as Year_First
