@@ -1,0 +1,15 @@
+Schedule_code;B_sel;Rank;Function;Status_function;Explanation_arguments_if_any;Numeric_arguments;Argument1;Argument2;Argument3;Argument4;Argument5;Argument6;Argument7;Argument8
+COMB;1;1;Select_all_available_datafiles;May be skipped;;FALSE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;1;2;Check_existence_datafiles;Obligatory;;FALSE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;1;3;Check_content_datafiles;Obligatory;;FALSE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;1;4;Truncate_datafiles;May be skipped;;TRUE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;1;5;Check_missing_years_in_level2_pools;Obligatory;;FALSE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;1;6;Import_weights_into_Swan_schedules;May be skipped;;FALSE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;0;7;Strip_ocv_files;May be skipped;names of ocv files;FALSE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;1;8;Make_empty_arg_output_file;Obligatory;;FALSE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;1;9;Rtrimcovin;Obligatory;;TRUE;1996;NA;NA;NA;NA;NA;NA;NA
+COMB;1;10;Assess_range_of_years_for_resultsfile;Obligatory;;FALSE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;1;11;Gather_results_of_countries_horizontal_format;Obligatory;;FALSE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;1;12;Gather_results_of_countries_vertical_format;Obligatory;;FALSE;NA;NA;NA;NA;NA;NA;NA;NA
+COMB;1;13;Gather_results_of_pools_horizontal_format;Obligatory;base year - slopes_years_from;TRUE;1996;1996;2000;2012;2017;NA;NA;NA
+COMB;1;14;Gather_results_of_pools_vertical_format;Obligatory;base year;TRUE;1996;NA;NA;NA;NA;NA;NA;NA

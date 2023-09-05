@@ -1,0 +1,171 @@
+Species_nr;Species_name;Sci_name
+70;Little Grebe;Tachybaptus ruficollis
+90;Great Crested Grebe;Podiceps cristatus
+1110;Cattle Egret;Bubulcus ibis
+1190;Little Egret;Egretta garzetta
+1220;Grey Heron;Ardea cinerea
+1340;White Stork;Ciconia ciconia
+1520;Mute Swan;Cygnus olor
+1730;Common Shelduck;Tadorna tadorna
+1860;Mallard;Anas platyrhynchos
+2600;Western Marsh-harrier;Circus aeruginosus
+2690;Eurasian Sparrowhawk;Accipiter nisus
+2870;Eurasian Buzzard;Buteo buteo
+3040;Common Kestrel;Falco tinnunculus
+3260;Hazel Grouse;Bonasa bonasia
+3320;Black Grouse;Lyrurus tetrix
+3580;Red-legged Partridge;Alectoris rufa
+3670;Grey Partridge;Perdix perdix
+3940;Common Pheasant;Phasianus colchicus
+4240;Common Moorhen;Gallinula chloropus
+4290;Common Coot;Fulica atra
+4330;Common Crane;Grus grus
+4420;Little Bustard;Tetrax tetrax
+4500;Eurasian Oystercatcher;Haematopus ostralegus
+4590;Eurasian Thick-knee;Burhinus oedicnemus
+4850;Eurasian Golden Plover;Pluvialis apricaria
+4930;Northern Lapwing;Vanellus vanellus
+5190;Common Snipe;Gallinago gallinago
+5320;Black-tailed Godwit;Limosa limosa
+5380;Whimbrel;Numenius phaeopus
+5410;Eurasian Curlew;Numenius arquata
+5450;Spotted Redshank;Tringa erythropus
+5460;Common Redshank;Tringa totanus
+5480;Common Greenshank;Tringa nebularia
+5530;Green Sandpiper;Tringa ochropus
+5540;Wood Sandpiper;Tringa glareola
+5560;Common Sandpiper;Actitis hypoleucos
+5820;Black-headed Gull;Larus ridibundus
+6680;Stock Dove;Columba oenas
+6700;Common Woodpigeon;Columba palumbus
+6840;Eurasian Collared-dove;Streptopelia decaocto
+6870;European Turtle-dove;Streptopelia turtur
+7160;Great Spotted Cuckoo;Clamator glandarius
+7240;Common Cuckoo;Cuculus canorus
+7950;Common Swift;Apus apus
+8310;Common Kingfisher;Alcedo atthis
+8400;European Bee-eater;Merops apiaster
+8460;Common Hoopoe;Upupa epops
+8480;Eurasian Wryneck;Jynx torquilla
+8550;Grey-faced Woodpecker;Picus canus
+8560;Eurasian Green Woodpecker / Iberian Green Woodpecker;Picus viridis / Picus sharpei
+8630;Black Woodpecker;Dryocopus martius
+8760;Great Spotted Woodpecker;Dendrocopos major
+8780;Syrian Woodpecker;Dendrocopos syriacus
+8830;Middle Spotted Woodpecker;Leiopicus medius
+8870;Lesser Spotted Woodpecker;Dryobates minor
+9610;Calandra Lark;Melanocorypha calandra
+9680;Greater Short-toed Lark;Calandrella brachydactyla
+9720;Crested Lark;Galerida cristata
+9730;Thekla's Lark;Galerida theklae
+9740;Woodlark;Lullula arborea
+9760;Eurasian Skylark;Alauda arvensis
+9910;Eurasian Crag Martin;Ptyonoprogne rupestris
+9920;Barn Swallow;Hirundo rustica
+9950;Red-rumped Swallow;Cecropis daurica
+10010;Northern House Martin;Delichon urbicum
+10050;Tawny Pipit;Anthus campestris
+10090;Tree Pipit;Anthus trivialis
+10110;Meadow Pipit;Anthus pratensis
+10170;Western Yellow Wagtail;Motacilla flava
+10190;Grey Wagtail;Motacilla cinerea
+10200;White Wagtail;Motacilla alba
+10480;Bohemian Waxwing;Bombycilla garrulus
+10660;Northern Wren;Troglodytes troglodytes
+10840;Dunnock;Prunella modularis
+10990;European Robin;Erithacus rubecula
+11030;Thrush Nightingale;Luscinia luscinia
+11040;Common Nightingale;Luscinia megarhynchos
+11060;Bluethroat;Cyanecula svecica
+11210;Black Redstart;Phoenicurus ochruros
+11220;Common Redstart;Phoenicurus phoenicurus
+11370;Whinchat;Saxicola rubetra
+11390;Common Stonechat;Saxicola torquatus
+11460;Northern Wheatear;Oenanthe oenanthe
+11471;Cyprus Wheatear;Oenanthe cypriaca
+11480;Black-eared Wheatear;Oenanthe hispanica
+11860;Ring Ouzel;Turdus torquatus
+11870;Eurasian Blackbird;Turdus merula
+11980;Fieldfare;Turdus pilaris
+12000;Song Thrush;Turdus philomelos
+12010;Redwing;Turdus iliacus
+12020;Mistle Thrush;Turdus viscivorus
+12200;Cetti's Warbler;Cettia cetti
+12260;Zitting Cisticola;Cisticola juncidis
+12360;Common Grasshopper-warbler;Locustella naevia
+12370;River Warbler;Locustella fluviatilis
+12430;Sedge Warbler;Acrocephalus schoenobaenus
+12500;Marsh Warbler;Acrocephalus palustris
+12510;Common Reed-warbler;Acrocephalus scirpaceus
+12530;Great Reed-warbler;Acrocephalus arundinaceus
+12550;Olivaceous Warbler;Iduna pallida
+12590;Icterine Warbler;Hippolais icterina
+12600;Melodious Warbler;Hippolais polyglotta
+12620;Dartford Warbler;Sylvia undata
+12650;Subalpine Warbler / Moltoni's Warbler;Sylvia cantillans / Sylvia subalpina
+12670;Sardinian Warbler;Sylvia melanocephala
+12680;Cyprus Warbler;Sylvia melanothorax
+12720;Western Orphean Warbler;Sylvia hortensis
+12730;Barred Warbler;Sylvia nisoria
+12740;Lesser Whitethroat;Sylvia curruca
+12750;Common Whitethroat;Sylvia communis
+12760;Garden Warbler;Sylvia borin
+12770;Eurasian Blackcap;Sylvia atricapilla
+13070;Western Bonelli's Warbler;Phylloscopus bonelli
+13080;Wood Warbler;Phylloscopus sibilatrix
+13110;Common Chiffchaff;Phylloscopus collybita
+13120;Willow Warbler;Phylloscopus trochilus
+13140;Goldcrest;Regulus regulus
+13150;Common Firecrest;Regulus ignicapilla
+13350;Spotted Flycatcher;Muscicapa striata
+13480;Collared Flycatcher;Ficedula albicollis
+13490;European Pied Flycatcher;Ficedula hypoleuca
+14370;Long-tailed Tit;Aegithalos caudatus
+14400;Marsh Tit;Poecile palustris
+14420;Willow Tit;Poecile montanus
+14540;Crested Tit;Lophophanes cristatus
+14610;Coal Tit;Periparus ater
+14620;Eurasian Blue Tit;Cyanistes caeruleus
+14640;Great Tit;Parus major
+14790;Eurasian Nuthatch;Sitta europaea
+14860;Eurasian Treecreeper;Certhia familiaris
+14870;Short-toed Treecreeper;Certhia brachydactyla
+15080;Eurasian Golden Oriole;Oriolus oriolus
+15150;Red-backed Shrike;Lanius collurio
+15190;Lesser Grey Shrike;Lanius minor
+15230;Woodchat Shrike;Lanius senator
+15390;Eurasian Jay;Garrulus glandarius
+15470;Iberian Azure-winged Magpie;Cyanopica cooki
+15490;Eurasian Magpie;Pica pica
+15570;Northern Nutcracker;Nucifraga caryocatactes
+15590;Red-billed Chough;Pyrrhocorax pyrrhocorax
+15600;Eurasian Jackdaw;Corvus monedula
+15630;Rook;Corvus frugilegus
+15670;Carrion Crow;Corvus corone
+15720;Common Raven;Corvus corax
+15820;Common Starling;Sturnus vulgaris
+15830;Spotless Starling;Sturnus unicolor
+15910;House Sparrow;Passer domesticus
+15980;Eurasian Tree Sparrow;Passer montanus
+16040;Rock Sparrow;Petronia petronia
+16360;Common Chaffinch;Fringilla coelebs
+16380;Brambling;Fringilla montifringilla
+16400;European Serin;Serinus serinus
+16440;Citril Finch;Carduelis citrinella
+16490;European Greenfinch;Chloris chloris
+16530;European Goldfinch;Carduelis carduelis
+16540;Eurasian Siskin;Spinus spinus
+16600;Common Linnet;Linaria cannabina
+16630;Redpoll;Acanthis flammea
+16790;Common Rosefinch;Carpodacus erythrinus
+17100;Eurasian Bullfinch;Pyrrhula pyrrhula
+17170;Hawfinch;Coccothraustes coccothraustes
+18470;Lapland Longspur;Calcarius lapponicus
+18570;Yellowhammer;Emberiza citrinella
+18580;Cirl Bunting;Emberiza cirlus
+18600;Rock Bunting;Emberiza cia
+18660;Ortolan Bunting;Emberiza hortulana
+18730;Rustic Bunting;Emberiza rustica
+18770;Reed Bunting;Emberiza schoeniclus
+18810;Black-headed Bunting;Emberiza melanocephala
+18820;Corn Bunting;Emberiza calandra
