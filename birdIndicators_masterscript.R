@@ -12,9 +12,9 @@ library(xtable)
 
 
 ## Get the selected 71 species and years to be included in the report
-Species_info <- read.csv2('data/ReportSpeciesPECBMS2020.csv')
+Species_info <- readRDS('data/ReportSpeciesPECBMS2020.rds')
 
-Spp_selection <- read.csv2('data/PECBMS_species_list_2022.csv') %>%
+Spp_selection <- readRDS('data/PECBMS_species_list_2022.rds') %>%
   tibble::as_tibble() %>%
   dplyr::left_join(Species_info, by = "EURINGCode") %>%
   dplyr::select(EURINGCode, Year_First, TCF_Basetime, TCF_Slope_From) %>%
