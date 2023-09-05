@@ -1,27 +1,31 @@
-require(tidyverse)
-require(rtrim)
-require(data.table)
-
-
-folder <- "C:/Users/diego.pavon-jordan/OneDrive - NINA/Documents/PECBMS/2023_Analysis"  
-setwd(folder)
+library(tidyverse)
+library(rtrim)
+library(data.table)
+library(RPostgres)
+library(odbc)
+library(RPostgreSQL)
+library(DBI)
+library(rpostgis)
+library(sf)
+library(lubridate)
+library(xtable)
 
 
 ## Get the selected 71 species and years to be included in the report
-Species_info <- read.csv2('ReportSpeciesPECBMS2020.csv')
+Species_info <- read.csv2('data/ReportSpeciesPECBMS2020.csv')
 
-Spp_selection <- read.csv2('PECBMS_species_list_2022.csv') %>%
-  left_join(Species_info) %>%
-  select(EURINGCode, Year_First, TCF_Basetime, TCF_Slope_From) %>%
-  as_tibble()%>%
-  mutate(Stratum = 63)
+Spp_selection <- read.csv2('data/PECBMS_species_list_2022.csv') %>%
+  tibble::as_tibble() %>%
+  dplyr::left_join(Species_info, by = "EURINGCode") %>%
+  dplyr::select(EURINGCode, Year_First, TCF_Basetime, TCF_Slope_From) %>%
+  dplyr::mutate(Stratum = 63)
 # 71 species - Ok!
 
 ## As per JAK email -> We use Year_First from ReportSpeciesPECBMS2020 and
 ## set TCF_Slope_From as the same year as Year_First
 
 Spp_selection3 <- Spp_selection %>%
-  mutate(TCF_Slope_From_NEW = Year_First)
+  dplyr::mutate(TCF_Slope_From_NEW = Year_First)
 # all species have basetime = 2008. Now, Year_First and TCF_Slope_From_NEW
 # have the same value
 
@@ -34,24 +38,18 @@ Spp_selection3 <- Spp_selection %>%
 
 ## 2007 (and 2006)
 Spp_selection_year07 <- Spp_selection3 %>%
-  filter(TCF_Slope_From_NEW == 2006 | TCF_Slope_From_NEW == 2007)
+  dplyr::filter(TCF_Slope_From_NEW %in% c(2006, 2007))
 # 54 species
 
 euring_codes07 <- Spp_selection_year07$EURINGCode
 
-unique(Spp_selection_year07$Year_First)
-# 2006 and 2007
-
 
 ## 2008
 Spp_selection_year08 <- Spp_selection3 %>%
-  filter(TCF_Slope_From_NEW == 2008)
+  dplyr::filter(TCF_Slope_From_NEW == 2008)
 # 17 species
 
 euring_codes08 <- Spp_selection_year08$EURINGCode
-
-unique(Spp_selection_year08$Year_First)
-# 2008
 
 
 ## Get the file names as required by PECBMS
@@ -143,6 +141,8 @@ for(i in 1:length(File_names08)){
   write.csv2(argument_file2[i, ], paste0('BMP_', euring_codes08[i],'_1_63_arg_input_stratum.csv'), row.names = FALSE)
 }
 
+# NOTE: The only difference between the two file groups (07 and 08) is the column "Year_from" which is
+# 2007 for the former and 2008 for the latter
 
 
 ##############################################################
@@ -152,19 +152,6 @@ for(i in 1:length(File_names08)){
 
 #folder <- "C:/Users/diego.pavon-jordan/OneDrive - NINA/Documents/PECBMS/2023_Analysis"  
 #setwd(folder)
-
-
-## Packages 
-suppressMessages(require('RPostgres'))
-suppressMessages(require('odbc'))
-suppressMessages(require(RPostgreSQL))
-suppressMessages(require(DBI))
-suppressMessages(require(tidyverse))
-suppressMessages(require(rpostgis))
-suppressMessages(require(sf))
-suppressMessages(require(lubridate))
-suppressMessages(require(xtable))
-require('rtrim')
 
 
 ## Connecting to the DB
@@ -177,21 +164,29 @@ con <- DBI::dbConnect(odbc(),
                       Trusted_Connection = "True")
 
 # Getting entire dataset (incl. -1s and 0s) for all species
-Bird_data <- tbl(con, 'TrimResults') %>%
-  filter(Year > 2005,
-         Species > 0) %>%
-  arrange(Site, Species, Year) %>%
-  as_tibble() %>%
-  select(Id, TrimId, Site,  Year, Species, Count)
+Bird_data <- dplyr::tbl(con, 'TrimResults') %>%
+  tibble::as_tibble() %>%
+  dplyr::filter(Year > 2005,
+                Species > 0) %>%
+  dplyr::arrange(Site, Species, Year) %>%
+  dplyr::select(Id, TrimId, Site,  Year, Species, Count)
 
 unique(Bird_data$Year)
 
+# NOTE: What gets downloaded from the database here are Trim RESULTS. 
+# How were/are these generated? Does this happen internally in the database
+# or is it done manually?
+
 # How many species?
-Bird_data %>% select(Species) %>% distinct()
+Bird_data %>% 
+  dplyr::select(Species) %>% 
+  dplyr::distinct()
 # 230 species
 
 # How many sites?
-Bird_data %>% select(Site) %>% distinct()
+Bird_data %>% 
+  dplyr::select(Site) %>% 
+  dplyr::distinct()
 # 493 sites 
 
 
@@ -199,32 +194,35 @@ Bird_data %>% select(Site) %>% distinct()
 ## with the ArtsID from the Art table in TOVTaksering to get EURING codes
 
 ## Getting the data from Art table
-SppID <- tbl(con, 'Art') %>%
-  mutate(Species = as.numeric(ArtsID)) %>%
-  select(Species, EURINGCode, Artsnavn_Lat, FK_Kode_Flokk) %>%
-  as_tibble() %>%
-  filter(Species > 0) %>%
-  arrange(Species) 
+SppID <- dplyr::tbl(con, 'Art') %>%
+  tibble::as_tibble() %>%
+  dplyr::mutate(Species = as.numeric(ArtsID)) %>%
+  dplyr::select(Species, EURINGCode, Artsnavn_Lat, FK_Kode_Flokk) %>%
+  dplyr::filter(Species > 0) %>%
+  dplyr::arrange(Species) 
 # 342 species
 
 
 ## Adding the EURING code form Art to the Bird_data (TrimResults)
-Bird_data_EURING <- Bird_data %>% left_join(SppID)
+Bird_data_EURING <- Bird_data %>% 
+  dplyr::left_join(SppID, by = "Species")
 
 ## Do we have missing EURING codes?
-Bird_data_EURING %>% filter(is.na(EURINGCode)) %>% distinct(Artsnavn_Lat)
+Bird_data_EURING %>% 
+  dplyr::filter(is.na(EURINGCode)) %>% 
+  dplyr::distinct(Artsnavn_Lat)
 # Yes! 4 species (2979 Columba livia, 9220 Sterna sp., 9280 Loxia sp., 9998)
 
 
 ## I remove these 4 species to have clean data from TrimResults with the EURING code added.
-Bird_data_EURING_clean <- Bird_data_EURING %>% filter(!is.na(EURINGCode)) %>%
-  mutate(Species_nr = as.numeric(EURINGCode))
+Bird_data_EURING_clean <- Bird_data_EURING %>% 
+  dplyr::filter(!is.na(EURINGCode)) %>%
+  dplyr::mutate(Species_nr = as.numeric(EURINGCode))
 
 ## Do we have missing EURING codes?
-Bird_data_EURING_clean %>% filter(is.na(EURINGCode))
+Bird_data_EURING_clean %>% 
+  dplyr::filter(is.na(EURINGCode))
 # No! Good!
-
-
 
 
 ## Now, I need to select only the 71 species (as per 2022 list) that we have to report to PECBMS
@@ -233,33 +231,27 @@ Bird_data_EURING_clean %>% filter(is.na(EURINGCode))
 ## Get the selected 71 species and years to be included in the report
 ## from the PECBMS_2022.R
 
-Species_info <- read.csv2('ReportSpeciesPECBMS2020.csv')
-
-Spp_selection <- read.csv2('PECBMS_species_list_2022.csv') %>%
-  left_join(Species_info) %>%
-  select(EURINGCode, Year_First, TCF_Basetime, TCF_Slope_From) %>%
-  as_tibble()%>%
-  mutate(Stratum = 63)
-# 71 species - Ok!
-
-
-Spp_selection <- Spp_selection %>% mutate(Species_nr = EURINGCode)
-# 71 species
+Spp_selection <- Spp_selection %>% 
+  dplyr::mutate(Species_nr = EURINGCode)
 
 
 # Selecting the species from the whole dataset by the EURING code (renamed as Species_nr)
 Data_PECBMS <- Bird_data_EURING_clean %>%
-  left_join(Spp_selection, by = 'Species_nr')
+  dplyr::left_join(Spp_selection, by = 'Species_nr')
 
 Data_PECBMS_clean <- Data_PECBMS %>% 
-  filter(!is.na(EURINGCode.y))
+  dplyr::filter(!is.na(EURINGCode.y))
 # 595,051 rows
 
 ## Do I have 71 species?
-Data_PECBMS_clean %>% distinct(Species) 
+Data_PECBMS_clean %>% 
+  dplyr::distinct(Species) 
 # Yes!
 
 write.csv2(Data_PECBMS_clean, 'Selected_species_to_PECBMS_2023.csv', row.names = F)
+
+# NOTE: Possible better saved to .rds
+
 ###############################################################################
 ## Now in Data_PECBMS_clean we have the full year-site counts             #####
 ## including -1s and 0s for the 71 species that we report to PECBMS       ##### 
@@ -270,63 +262,59 @@ write.csv2(Data_PECBMS_clean, 'Selected_species_to_PECBMS_2023.csv', row.names =
 
 ## Missing years are already added in the database.
 for_trim <- read.csv2('Selected_species_to_PECBMS_2023.csv') %>% 
-  select(Site, Year, Species_nr, Count, Artsnavn_Lat) %>%
-  as_tibble() %>%
-  mutate(EURINGCode = Species_nr)
-
-for_trim %>% select(Species_nr) %>% distinct()
-# 71 species. Ok!
+  tibble::as_tibble() %>%
+  dplyr::select(Site, Year, Species_nr, Count, Artsnavn_Lat) %>%
+  dplyr::mutate(EURINGCode = Species_nr)
 
 
 ## removing the annoying blank space at the end of the names
 spp_names <- for_trim %>% 
-  select(Artsnavn_Lat) %>% 
-  distinct() %>% 
-  mutate(Spp_name = str_trim(Artsnavn_Lat))
+  dplyr::select(Artsnavn_Lat) %>% 
+  dplyr::distinct() %>% 
+  dplyr::mutate(Spp_name = stringr::str_trim(Artsnavn_Lat))
 
-
+for_trim <- for_trim %>% 
+  dplyr::left_join(spp_names)
 
 ## make a table indicating the species that need 2007 removed (spp starting in 2008)
 euring_codes08_2 <- as.data.frame(euring_codes08) %>%
-  mutate(remove_year = 2007) %>%
-  as_tibble() %>%
-  rename(Species_nr = euring_codes08)
-
-for_trim <- for_trim %>% left_join(spp_names)
+  tibble::as_tibble() %>%
+  dplyr::mutate(remove_year = 2007) %>%
+  dplyr::rename(Species_nr = euring_codes08)
 
 ## EURING codes for all 71 species
 euring_codes <- for_trim %>%
-  select(EURINGCode) %>%
-  distinct() %>%
-  arrange(EURINGCode)
-
+  dplyr::select(EURINGCode) %>%
+  dplyr::distinct() %>%
+  dplyr::arrange(EURINGCode)
 
 # Create a list for all species.
 # The new trim does not like -1s, so we need to add NAs instead
 # I also remove here the undesired years
 by_spp <- for_trim %>%
-  rename(year = Year,
-         site = Site,
-         count = Count) %>%
-  select(-Artsnavn_Lat) %>%
+  dplyr::rename(year = Year,
+                site = Site,
+                count = Count) %>%
+  dplyr::select(-Artsnavn_Lat) %>%
   #na_if(-1) %>%
-  filter(year > 2006) %>%
-  left_join(euring_codes08_2) %>%
-  arrange(site, year) %>%
-  mutate(remove_row = case_when(year == remove_year ~ 'yes',
-                                TRUE ~'no')) %>%
-  filter(remove_row == 'no') %>%
-  select(site, year, count, EURINGCode) %>%
-  arrange(EURINGCode) %>%
-  group_by(EURINGCode) %>%
-  nest()
+  dplyr::filter(year > 2006) %>%
+  dplyr::left_join(euring_codes08_2, by = "Species_nr") %>%
+  dplyr::arrange(site, year) %>%
+  dplyr::mutate(remove_row = dplyr::case_when(year == remove_year ~ 'yes',
+                                              TRUE ~'no')) %>%
+  dplyr::filter(remove_row == 'no') %>%
+  dplyr::select(site, year, count, EURINGCode) %>%
+  dplyr::arrange(EURINGCode) %>%
+  dplyr::group_by(EURINGCode) %>%
+  tidyr::nest()
 
 by_spp
 
 #check it out
-by_spp[['data']][[1]] %>% filter(site == 101) # starts in 2008!
+by_spp[['data']][[1]] %>% 
+  dplyr::filter(site == 101) # starts in 2008!
 euring_codes[1,]
-filter(for_trim, EURINGCode == 1860)
+dplyr::filter(for_trim, EURINGCode == 1860)
 # OK!
 
 
@@ -334,7 +322,6 @@ filter(for_trim, EURINGCode == 1860)
 for(i in 1:nrow(euring_codes)){
   write.csv2(by_spp[['data']][[i]], paste0('BMP_', euring_codes[i,1],'_1_63_counts.csv'), row.names = FALSE)
 }
-
 
 ################################################################################
 ################# END OF DATA PREPARATION ######################################
@@ -358,6 +345,8 @@ for(i in 1:nrow(euring_codes)){
 # Link to script with functions   !! user dependent !!
 source("C:/Users/diego.pavon-jordan/Documents/PECBMS/02_RTRIM_shell_v1.4/functions_Shell_Rtrim.R")
 
+# NOTE: I currently do not have access to that, so this is as far as I get for now
+
 # The required library
 #library(rtrim)
 
@@ -371,7 +360,7 @@ setwd(folder)
 listSpeciesStratumCombinations <- dir(folder, pattern = "arg_input_stratum.csv")
 
 # The number of files in the directory.                                                
-numberSpeciesStratumCombinations <- length (listSpeciesStratumCombinations)
+numberSpeciesStratumCombinations <- length(listSpeciesStratumCombinations)
 
 # Make a table for an overview. 
 # The tabel lists which analyses were successful or not for all runs 
