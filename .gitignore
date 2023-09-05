@@ -40,3 +40,6 @@ vignettes/*.pdf
 
 # PDF plots
 *.pdf
+
+# CSV files
+*.csv
