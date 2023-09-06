@@ -30,139 +30,19 @@ Spp_selection <- listSpecies_PECBMS(file_sppInfo_PECBMS = file_sppInfo_PECBMS,
                                     file_sppList_PECBMS = file_sppList_PECBMS)
 
 
+## Write PECBMS arguments input files for each species
+argument_file <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection,
+                                                  folderPath = "PECBMS_Files")
+
+
 #---
-
-## As per JAK email -> We use Year_First from ReportSpeciesPECBMS2020 and
-## set TCF_Slope_From as the same year as Year_First
-
-Spp_selection3 <- Spp_selection %>%
-  dplyr::mutate(TCF_Slope_From_NEW = Year_First)
-# all species have basetime = 2008. Now, Year_First and TCF_Slope_From_NEW
-# have the same value
-
-
-## so I split the data set in those species with trend
-## starting in 2007 (and 2006) and those starting in 2008 (based on TCF_Slope_From_NEW)
-
-
-## Group species by starting year of time series
-
-## 2007 (and 2006)
-Spp_selection_year07 <- Spp_selection3 %>%
-  dplyr::filter(TCF_Slope_From_NEW %in% c(2006, 2007))
-# 54 species
-
-euring_codes07 <- Spp_selection_year07$EURINGCode
-
-
-## 2008
-Spp_selection_year08 <- Spp_selection3 %>%
-  dplyr::filter(TCF_Slope_From_NEW == 2008)
-# 17 species
-
-euring_codes08 <- Spp_selection_year08$EURINGCode
-
-
-## Get the file names as required by PECBMS
-File_names07 <- NULL
-File_names08 <- NULL
-
-for(i in 1:length(euring_codes07)){
-  File_names07[i] <- paste0('BMP_', euring_codes07[i],'_1_63')
-}
-
-for(i in 1:length(euring_codes08)){
-  File_names08[i] <- paste0('BMP_', euring_codes08[i],'_1_63')
-}
-
-File_names07
-File_names08
-
-
-
-## Saving the species-specific input files as per rtrim-shell format request
-## For trends starting in 2007
-
-File <- NA
-Base_year_first_year <- 2008
-Base_year_last_year <- 2008
-Changepoints <- 'all'
-Serial_correlation <- 'TRUE'
-Overdispersion <- 'TRUE'
-Presence_weights <- 'FALSE'
-Presence_monthfactors <- 'FALSE'
-Year_from <- 2007
-Save_fitted_values <- 'TRUE'
-
-argument_file <- data.frame(File, Base_year_first_year, Base_year_last_year,
-                            Changepoints, Serial_correlation, Overdispersion,
-                            Presence_weights, Presence_monthfactors, Year_from,
-                            Save_fitted_values)
-
-for(i in 1:length(File_names07)){
-  
-  argument_file[i,1] <- File_names07[i]
-  argument_file[i,2] <- 2008
-  argument_file[i,3] <- 2008
-  argument_file[i,4] <- 'all'
-  argument_file[i,5] <- 'TRUE'
-  argument_file[i,6] <- 'TRUE'
-  argument_file[i,7] <- 'FALSE'
-  argument_file[i,8] <- 'FALSE'
-  argument_file[i,9] <- 2007
-  argument_file[i,10] <- 'TRUE'
-  
-  write.csv2(argument_file[i, ], paste0('BMP_', euring_codes07[i],'_1_63_arg_input_stratum.csv'), row.names = FALSE)
-}
-
-
-
-## And for 2008
-
-File <- NA
-Base_year_first_year2 <- 2008
-Base_year_last_year2 <- 2008
-Changepoints <- 'all'
-Serial_correlation <- 'TRUE'
-Overdispersion <- 'TRUE'
-Presence_weights <- 'FALSE'
-Presence_monthfactors <- 'FALSE'
-Year_from <- 2008
-Save_fitted_values <- 'TRUE'
-
-argument_file2 <- data.frame(File, Base_year_first_year2, Base_year_last_year2,
-                             Changepoints, Serial_correlation, Overdispersion,
-                             Presence_weights, Presence_monthfactors, Year_from,
-                             Save_fitted_values)
-
-
-for(i in 1:length(File_names08)){
-  
-  argument_file2[i,1] <- File_names08[i]
-  argument_file2[i,2] <- 2008
-  argument_file2[i,3] <- 2008
-  argument_file2[i,4] <- 'all'
-  argument_file2[i,5] <- 'TRUE'
-  argument_file2[i,6] <- 'TRUE'
-  argument_file2[i,7] <- 'FALSE'
-  argument_file2[i,8] <- 'FALSE'
-  argument_file2[i,9] <- 2008
-  argument_file2[i,10] <- 'TRUE'
-  
-  write.csv2(argument_file2[i, ], paste0('BMP_', euring_codes08[i],'_1_63_arg_input_stratum.csv'), row.names = FALSE)
-}
-
-# NOTE: The only difference between the two file groups (07 and 08) is the column "Year_from" which is
-# 2007 for the former and 2008 for the latter
-
 
 ##############################################################
 #### PREPARING THE TOV-E DATA FOR THE PECBMS REPORT 2023  ####
 #### This chunck of code is from Retrieve_Data_from_DB_2023 ##
 ##############################################################
 
-#folder <- "C:/Users/diego.pavon-jordan/OneDrive - NINA/Documents/PECBMS/2023_Analysis"  
-#setwd(folder)
+
 
 
 ## Connecting to the DB
