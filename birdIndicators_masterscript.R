@@ -21,6 +21,9 @@ sourceDir <- function(path, trace = TRUE, ...) {
 }
 sourceDir('R')
 
+#-----------------------#
+# PECBMS Analysis setup #
+#-----------------------#
 
 ## Get the selected 71 species and years to be included in the report
 file_sppInfo_PECBMS <- "data/ReportSpeciesPECBMS2020.rds"
@@ -35,6 +38,23 @@ argument_file <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection,
                                                   folderPath = "PECBMS_Files")
 
 
+#-----------------#
+# TOV-E data prep #
+#-----------------#
+
+## Download Trim data from TOV-E database
+dataTable <- "TrimResults"
+minYear <- 2006
+maxYear <- 2023
+
+TOVE_data <- downloadData_TOVE(dataTable = dataTable,
+                               minYear = minYear, maxYear = maxYear,
+                               drop_negativeSpp = TRUE)
+
+# NOTE: What gets downloaded from the database here are Trim RESULTS. 
+# How were/are these generated? Does this happen internally in the database
+# or is it done manually?
+
 #---
 
 ##############################################################
@@ -45,28 +65,15 @@ argument_file <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection,
 
 
 
-## Connecting to the DB
-sort(unique(odbcListDrivers()[[1]]))
-
-con <- DBI::dbConnect(odbc(),
-                      Driver   = "SQL server", 
-                      Server   = "ninsql07.nina.no",
-                      Database = "TOVTaksering",
-                      Trusted_Connection = "True")
 
 # Getting entire dataset (incl. -1s and 0s) for all species
 Bird_data <- dplyr::tbl(con, 'TrimResults') %>%
-  tibble::as_tibble() %>%
-  dplyr::filter(Year > 2005,
-                Species > 0) %>%
-  dplyr::arrange(Site, Species, Year) %>%
+
   dplyr::select(Id, TrimId, Site,  Year, Species, Count)
 
 unique(Bird_data$Year)
 
-# NOTE: What gets downloaded from the database here are Trim RESULTS. 
-# How were/are these generated? Does this happen internally in the database
-# or is it done manually?
+
 
 # How many species?
 Bird_data %>% 
