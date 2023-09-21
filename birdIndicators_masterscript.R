@@ -53,108 +53,11 @@ Trim_data <- downloadData_TRIM(minYear = minYear, maxYear = maxYear,
 # How were/are these generated? Does this happen internally in the database
 # or is it done manually?
 
-
-## Now, I need to select only the 71 species (as per 2022 list) that we have to report to PECBMS
-
-
-## Get the selected 71 species and years to be included in the report
-## from the PECBMS_2022.R
-
-Spp_selection <- Spp_selection %>% 
-  dplyr::mutate(Species_nr = EURINGCode)
-
-
-# Selecting the species from the whole dataset by the EURING code (renamed as Species_nr)
-Data_PECBMS <- Bird_data_EURING_clean %>%
-  dplyr::left_join(Spp_selection, by = 'Species_nr')
-
-Data_PECBMS_clean <- Data_PECBMS %>% 
-  dplyr::filter(!is.na(EURINGCode.y))
-# 595,051 rows
-
-## Do I have 71 species?
-Data_PECBMS_clean %>% 
-  dplyr::distinct(Species) 
-# Yes!
-
-write.csv2(Data_PECBMS_clean, 'Selected_species_to_PECBMS_2023.csv', row.names = F)
-
-# NOTE: Possible better saved to .rds
-
-###############################################################################
-## Now in Data_PECBMS_clean we have the full year-site counts             #####
-## including -1s and 0s for the 71 species that we report to PECBMS       ##### 
-###############################################################################
-
-
-#### In case you start from here, just load the file :)
-
-## Missing years are already added in the database.
-for_trim <- read.csv2('Selected_species_to_PECBMS_2023.csv') %>% 
-  tibble::as_tibble() %>%
-  dplyr::select(Site, Year, Species_nr, Count, Artsnavn_Lat) %>%
-  dplyr::mutate(EURINGCode = Species_nr)
-
-
-## removing the annoying blank space at the end of the names
-spp_names <- for_trim %>% 
-  dplyr::select(Artsnavn_Lat) %>% 
-  dplyr::distinct() %>% 
-  dplyr::mutate(Spp_name = stringr::str_trim(Artsnavn_Lat))
-
-for_trim <- for_trim %>% 
-  dplyr::left_join(spp_names)
-
-## make a table indicating the species that need 2007 removed (spp starting in 2008)
-euring_codes08_2 <- as.data.frame(euring_codes08) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(remove_year = 2007) %>%
-  dplyr::rename(Species_nr = euring_codes08)
-
-## EURING codes for all 71 species
-euring_codes <- for_trim %>%
-  dplyr::select(EURINGCode) %>%
-  dplyr::distinct() %>%
-  dplyr::arrange(EURINGCode)
-
-# Create a list for all species.
-# The new trim does not like -1s, so we need to add NAs instead
-# I also remove here the undesired years
-by_spp <- for_trim %>%
-  dplyr::rename(year = Year,
-                site = Site,
-                count = Count) %>%
-  dplyr::select(-Artsnavn_Lat) %>%
-  #na_if(-1) %>%
-  dplyr::filter(year > 2006) %>%
-  dplyr::left_join(euring_codes08_2, by = "Species_nr") %>%
-  dplyr::arrange(site, year) %>%
-  dplyr::mutate(remove_row = dplyr::case_when(year == remove_year ~ 'yes',
-                                              TRUE ~'no')) %>%
-  dplyr::filter(remove_row == 'no') %>%
-  dplyr::select(site, year, count, EURINGCode) %>%
-  dplyr::arrange(EURINGCode) %>%
-  dplyr::group_by(EURINGCode) %>%
-  tidyr::nest()
-
-by_spp
-
-#check it out
-by_spp[['data']][[1]] %>% 
-  dplyr::filter(site == 101) # starts in 2008!
-euring_codes[1,]
-dplyr::filter(for_trim, EURINGCode == 1860)
-# OK!
-
-
-## Saving the species-specific input files as per rtrim-shell format request
-for(i in 1:nrow(euring_codes)){
-  write.csv2(by_spp[['data']][[i]], paste0('BMP_', euring_codes[i,1],'_1_63_counts.csv'), row.names = FALSE)
-}
-
-################################################################################
-################# END OF DATA PREPARATION ######################################
-################################################################################
+## Subset data to contain only relevant species
+PECBMS_data <- makeInputData_PECBMS(Trim_data = Trim_data,
+                                    Spp_selection = Spp_selection,
+                                    convertNA = TRUE, 
+                                    save_allSppData = TRUE, returnData = TRUE)
 
 
 
