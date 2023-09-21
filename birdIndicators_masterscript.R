@@ -42,85 +42,16 @@ argument_file <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection,
 # TOV-E data prep #
 #-----------------#
 
-## Download Trim data from TOV-E database
-dataTable <- "TrimResults"
+## Download Trim data, incl. EURING codes, from database
 minYear <- 2006
 maxYear <- 2023
 
-TOVE_data <- downloadData_TOVE(dataTable = dataTable,
-                               minYear = minYear, maxYear = maxYear,
+Trim_data <- downloadData_TRIM(minYear = minYear, maxYear = maxYear,
                                drop_negativeSpp = TRUE)
 
 # NOTE: What gets downloaded from the database here are Trim RESULTS. 
 # How were/are these generated? Does this happen internally in the database
 # or is it done manually?
-
-#---
-
-##############################################################
-#### PREPARING THE TOV-E DATA FOR THE PECBMS REPORT 2023  ####
-#### This chunck of code is from Retrieve_Data_from_DB_2023 ##
-##############################################################
-
-
-
-
-
-# Getting entire dataset (incl. -1s and 0s) for all species
-Bird_data <- dplyr::tbl(con, 'TrimResults') %>%
-
-  dplyr::select(Id, TrimId, Site,  Year, Species, Count)
-
-unique(Bird_data$Year)
-
-
-
-# How many species?
-Bird_data %>% 
-  dplyr::select(Species) %>% 
-  dplyr::distinct()
-# 230 species
-
-# How many sites?
-Bird_data %>% 
-  dplyr::select(Site) %>% 
-  dplyr::distinct()
-# 493 sites 
-
-
-## Linking the Species code from Bird_Data
-## with the ArtsID from the Art table in TOVTaksering to get EURING codes
-
-## Getting the data from Art table
-SppID <- dplyr::tbl(con, 'Art') %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(Species = as.numeric(ArtsID)) %>%
-  dplyr::select(Species, EURINGCode, Artsnavn_Lat, FK_Kode_Flokk) %>%
-  dplyr::filter(Species > 0) %>%
-  dplyr::arrange(Species) 
-# 342 species
-
-
-## Adding the EURING code form Art to the Bird_data (TrimResults)
-Bird_data_EURING <- Bird_data %>% 
-  dplyr::left_join(SppID, by = "Species")
-
-## Do we have missing EURING codes?
-Bird_data_EURING %>% 
-  dplyr::filter(is.na(EURINGCode)) %>% 
-  dplyr::distinct(Artsnavn_Lat)
-# Yes! 4 species (2979 Columba livia, 9220 Sterna sp., 9280 Loxia sp., 9998)
-
-
-## I remove these 4 species to have clean data from TrimResults with the EURING code added.
-Bird_data_EURING_clean <- Bird_data_EURING %>% 
-  dplyr::filter(!is.na(EURINGCode)) %>%
-  dplyr::mutate(Species_nr = as.numeric(EURINGCode))
-
-## Do we have missing EURING codes?
-Bird_data_EURING_clean %>% 
-  dplyr::filter(is.na(EURINGCode))
-# No! Good!
 
 
 ## Now, I need to select only the 71 species (as per 2022 list) that we have to report to PECBMS
