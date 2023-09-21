@@ -60,6 +60,10 @@ downloadData_TRIM <- function(minYear, maxYear, drop_negativeSpp = TRUE){
     dplyr::filter(!is.na(EURINGCode)) %>%
     dplyr::mutate(Species_nr = as.numeric(EURINGCode))
   
+  ## Remove whitespace from species names
+  Trim_data_EURING <- Trim_data_EURING %>%
+    dplyr::mutate(Spp_name = stringr::str_trim(Artsnavn_Lat)) %>%
+    dplyr::select(-Artsnavn_Lat)
   
   ## Print dataset information
   message(paste0(noEURING, " species were removed as they have no EURING code."))
