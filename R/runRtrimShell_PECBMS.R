@@ -1,5 +1,27 @@
 runRtrimShell_PECBMS <- function(){
   
+  ## Check whether required helper functions are available
+  rtrim_shell_funNames <- c("fill_All_Indices_All_Trends",
+                            "fill_arg_output_file",
+                            "fill_Indices_TT_file",
+                            "make_All_Indices_All_Trends",
+                            "make_arg_output_file",
+                            "make_Indices_TT_file",
+                            "makeOverview")
+  
+  rtrim_shell_funExist <- rep(NA, length(rtrim_shell_funNames))
+  
+  for(i in 1:length(rtrim_shell_funNames)){
+    rtrim_shell_funExist[i] <- exists(rtrim_shell_funNames[i])
+  }
+  
+  if(any(!rtrim_shell_funExist)){
+    missingFun <- rtrim_shell_funNames[which(!rtrim_shell_funExist)]
+    stop(paste0("The following Rtrim shell helper functions are missing: ", 
+                paste(missingFun, collapse = ", "),
+                ". \nThese functions are provided in the script x3_functions_Shell_Rtrim.R"))
+  }
+  
   #####################################################################################################################
   # RTRIM-shell. Version RTRIM-shell_v1.7
   # Tool to run rtrim (= TRIM in R) for multiple species and subsets of sites.
@@ -90,14 +112,7 @@ runRtrimShell_PECBMS <- function(){
   # PREPARATION.
   #####################################################################################################################
   # 1/06/2020 Eva Silarova unified upper and lower cases in variable names - v1.1
-  rm(list=ls())
-  
-  # Link to script with functions   !! user dependent !! !!Since the scripts are numbered, enter x3_functions_Shell_Rtrim.R!!
-  source("D://RTRIM-shell//02_RTRIM_shell_v1.7_scripts//shell//x3_functions_Shell_Rtrim.R") #Adjust the path to your working folder according to your computer (try different slashes, if double backslash does not work)
-  # Do not forget to set script with functions x3_functions_Shell_Rtrim.R at the end of path!!!
-  # The required library
-  library(rtrim)
-  
+
   # Select the directory which contains the RTRIM output files
   # This directory also contains the files with arguments used in the rtrim function.
   folder <- "D://RTRIM-shell//02_RTRIM_shell_v1.7_scripts//shell"  # !! user dependent!! 
