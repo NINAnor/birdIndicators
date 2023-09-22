@@ -59,8 +59,6 @@ PECBMS_data <- makeInputData_PECBMS(Trim_data = Trim_data,
                                     convertNA = TRUE, 
                                     save_allSppData = TRUE, returnData = TRUE)
 
-
-
 #------------------#
 # PECBMS Trim runs #
 #------------------#
@@ -80,6 +78,15 @@ runRtrimShell_PECBMS(folder = folder)
 trimResults_PECBMS <- processRtrimOutput_PECBMS(folder = folder)
 
 
+#--------------------------------#
+# Post-processing: collect files #
+#--------------------------------#
 
-
+## Set name of folder in which to collect files
 subFolderName <- "Species_files"
+
+## Collect (and rename) species and summary files
+collectSpeciesFiles_PECBMS(folder = folder, 
+                           subFolderName = subFolderName)
+
+

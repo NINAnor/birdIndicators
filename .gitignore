@@ -50,3 +50,5 @@ vignettes/*.pdf
 # Original code/files from Diego/PECBMS
 /Code_from_Diego/
 
+# PECBMS input and output files
+/PECBMS_Files
