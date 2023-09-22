@@ -9,7 +9,7 @@ library(rpostgis)
 library(sf)
 library(lubridate)
 library(xtable)
-
+library(rtrim)
 
 ## Source all functions in "R" folder
 sourceDir <- function(path, trace = TRUE, ...) {
@@ -61,225 +61,22 @@ PECBMS_data <- makeInputData_PECBMS(Trim_data = Trim_data,
 
 
 
+#------------------#
+# PECBMS Trim runs #
+#------------------#
+
+## Set directory
+folder <- "PECBMS_Files"
+
+## Run analyses using the PECBMS Rtrim shell
+runRtrimShell_PECBMS(folder = folder)
+
 
 ################################################################################
 #### START CODE PROVIDED BY PECBMS #############################################
 #### Running rtrim_shell           #############################################
 #### Version RTRIM-shell_v1.4      #############################################
 ################################################################################
-
-################################################################################
-# PREPARATION.
-################################################################################
-# 1-06-2020 Eva Silarova unified upper and lower cases in variable names - v1.1
-#rm(list=ls())
-
-# Link to script with functions   !! user dependent !!
-source("C:/Users/diego.pavon-jordan/Documents/PECBMS/02_RTRIM_shell_v1.4/functions_Shell_Rtrim.R")
-
-# NOTE: I currently do not have access to that, so this is as far as I get for now
-
-# The required library
-#library(rtrim)
-
-# Select the directory which contains the RTRIM output files
-# This directory also contains the files with arguments used in the rtrim function.
-# folder <- choose.dir(default ="D:/WORK/RTRIM-shell/Examples_for_coordinators_Input-files/00_RTRIM-shell_inputs&scripts_corrected_AG", caption = "Select directory which contains data which has been analysed")
-setwd(folder)
-
-# Select all files in the directory which contain arguments.
-# The files can be recognized by the pattern "arg_input_arguments".
-listSpeciesStratumCombinations <- dir(folder, pattern = "arg_input_stratum.csv")
-
-# The number of files in the directory.                                                
-numberSpeciesStratumCombinations <- length(listSpeciesStratumCombinations)
-
-# Make a table for an overview. 
-# The tabel lists which analyses were successful or not for all runs 
-
-overview <- makeOverview(listSpeciesStratumCombinations)
-# The code of this function can be found in functions_Shell_Rtrim.R.
-# The source command (see above) makes it possible to use this function in this code.
-
-# --> ALL WORKING GOOD!
-
-
-
-
-#####################################################################################################################
-# READING ARGUMENT AND COUNT FILES. 
-#####################################################################################################################
-
-for (j in 1:numberSpeciesStratumCombinations) {
-  
-  # j<- 1
-  
-  # The file with arguments contains the information to analyse the counts for a particular combination of species and stratum. 
-  # The arguments are used when calling the function 'rtrim'
-  arguments <- read.csv2(listSpeciesStratumCombinations[j], header = TRUE, stringsAsFactors = FALSE)
-  
-  # The file with counts contains the counts for a particular combination of species and stratum.
-  # Weights may also be present in this file.
-  counts <- read.csv2(paste(arguments$File, "_counts.csv", sep = ""), stringsAsFactors = FALSE, header = TRUE)
-  
-  overview$first_year[j] <- min(counts$year, na.rm = TRUE)
-  overview$last_year[j]  <- max(counts$year, na.rm = TRUE)
-  # First and last year for each combination of stratum and species is stored for later use.
-  
-  #####################################################################################################################
-  # RUNNING RTRIM.
-  #####################################################################################################################
-  
-  # Start with the most elaborate model and switch automatically to a more simple model when needed.
-  
-  result <- tryCatch(
-    {
-      # Attempt 1
-      if (arguments$Presence_weights == TRUE & arguments$Presence_monthfactors == TRUE) {
-        trim(count ~ site + (year + month), data = counts, weights = "weights", model = 2, changepoints = arguments$Changepoints, serialcor = FALSE, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)
-      } else {
-        if (arguments$Presence_weights == TRUE & arguments$Presence_monthfactors == FALSE) {
-          trim(count ~ site + year, data = counts, weights = "weights", model = 2, changepoints = arguments$Changepoints, serialcor = arguments$Serial_correlation, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)
-        } else{
-          if(arguments$Presence_weights == FALSE & arguments$Presence_monthfactors == TRUE) {
-            trim(count ~ site + (year + month), data = counts,            model = 2, changepoints = arguments$Changepoints, serialcor = FALSE, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)    
-          } else{
-            trim(count ~ site + year, data = counts,                      model = 2, changepoints = arguments$Changepoints, serialcor = arguments$Serial_correlation, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)    
-          }
-        }
-      }
-    }
-    , error = warning)     
-  
-  if (class(result) == "trim") {
-    
-    save(x = result,  file = paste(arguments$File, ".RData", sep = ""))
-    overview$attempt_1[overview$ss_combinations == arguments$File] <- "success"
-    overview$success[overview$ss_combinations == arguments$File] <- "yes"
-    
-  } else {
-    
-    # First attempt failed, try a less elaborate model by setting serial correlation off. 
-    # Also, when month factors are available, no changepoints are estimated in the next model.
-    
-    overview$attempt_1[overview$ss_combinations == arguments$File] <- "error"
-    overview$error_1[overview$ss_combinations == arguments$File] <- result
-    
-    result <- tryCatch(
-      {
-        # attempt 2 
-        if (arguments$Presence_weights == TRUE & arguments$Presence_monthfactors == TRUE) {
-          trim(count ~ site + (year + month), data = counts, weights = "weights", model = 2,                               serialcor = FALSE, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)
-        } else {
-          if (arguments$Presence_weights == TRUE & arguments$Presence_monthfactors == FALSE) {
-            trim(count ~ site + year, data = counts, weights = "weights", model = 2, changepoints = arguments$Changepoints, serialcor = FALSE, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)
-          } else{
-            if(arguments$Presence_weights == FALSE & arguments$Presence_monthfactors == TRUE) {
-              trim(count ~ site + (year + month), data = counts,                      model = 2,                               serialcor = FALSE, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)    
-            } else{
-              trim(count ~ site + year, data = counts,                      model = 2, changepoints = arguments$Changepoints, serialcor = FALSE, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)    
-            }
-          }
-        }
-      }
-      , error = warning)
-    
-    if (class(result) == "trim") {
-      
-      save(x = result,  file = paste(arguments$File, ".RData", sep = ""))
-      overview$attempt_2[overview$ss_combinations == arguments$File] <- "success"
-      overview$success[overview$ss_combinations == arguments$File] <- "yes"
-      
-    } else {
-      
-      # Second attempt also failed. Now try an even more simple model: no month factors, no changepoints, but serial correlation switched on. 
-      # Note that no further options are available to include month factors in the model. 
-      
-      overview$attempt_2[overview$ss_combinations == arguments$File] <- "error"
-      overview$error_2[overview$ss_combinations == arguments$File] <- result
-      
-      if (arguments$Presence_monthfactors == TRUE) {
-        
-        cat("Analysis failed for this combination of species and stratum:", arguments$File, "\n")
-        
-      }
-      
-      result <- tryCatch( 
-        {
-          # attempt 3
-          
-          if (arguments$Presence_weights == TRUE & arguments$Presence_monthfactors == FALSE) {
-            
-            trim(count ~ site + year, data = counts, weights = "weights", model = 2, serialcor = TRUE, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)
-            
-          } else{
-            
-            if (arguments$Presence_weights == FALSE & arguments$Presence_monthfactors == FALSE) {
-              trim(count ~ site + year, data = counts,                      model = 2, serialcor = TRUE, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)    
-            }
-          }
-        }
-        , error = warning)
-      
-      if (class(result) == "trim") {
-        
-        save(x = result,  file = paste(arguments$File, ".RData", sep = ""))
-        overview$attempt_3[overview$ss_combinations == arguments$File] <- "success"
-        overview$success[overview$ss_combinations == arguments$File] <- "yes"
-        
-      } else {
-        if (arguments$Presence_monthfactors == FALSE) {
-          overview$attempt_3[overview$ss_combinations == arguments$File] <- "error"
-          overview$error_3[overview$ss_combinations == arguments$File] <- result
-        }
-        
-        # Third attempt also failed. Now try the most simple model: no changepoints at all and no serial correlation. 
-        
-        result <- tryCatch(
-          {
-            # Final attempt
-            
-            if (arguments$Presence_weights == TRUE & arguments$Presence_monthfactors == FALSE) {
-              trim(count ~ site + year, data = counts, weights = "weights", model = 2, serialcor = FALSE, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)
-            } else{
-              if (arguments$Presence_weights == FALSE & arguments$Presence_monthfactors == FALSE) {
-                trim(count ~ site + year, data = counts,                      model = 2, serialcor = FALSE, overdisp = arguments$Overdispersion, max_iter = 200, conv_crit = 1e-5)    
-              } 
-            }
-            
-          }
-          
-          , error = warning)
-        
-        if (class(result) == "trim") {
-          
-          save(x = result,  file = paste(arguments$File, ".RData", sep = ""))
-          overview$attempt_4[overview$ss_combinations == arguments$File] <- "success"
-          overview$success[overview$ss_combinations == arguments$File] <- "yes"
-          
-        } else {
-          if (arguments$Presence_monthfactors == FALSE) {
-            
-            # When this analysis also fails, send a error message to screen.
-            
-            overview$attempt_4[overview$ss_combinations == arguments$File] <- "error"
-            overview$error_4[overview$ss_combinations == arguments$File] <- result
-            
-            cat("Analysis failed for this combination of species and stratum:", arguments$File, "\n")
-          }        
-        }
-      }  
-    } 
-  }  
-}
-
-#####################################################################################################################
-# WRITING OVERVIEW OF RTRIM SUCCESSES and FAILURES.  
-#####################################################################################################################
-overview <- overview[order(overview$species_number, overview$stratum_number), ]
-write.csv2(overview, "overview.csv", row.names = FALSE)
-
-
 
 
 

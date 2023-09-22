@@ -1,4 +1,14 @@
-runRtrimShell_PECBMS <- function(){
+#' Run PECBMS' Rtrim shell script
+#'
+#' @param folder character. Path to directory which contains the RTRIM argument
+#' and output files, and into which to save outputs.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+
+runRtrimShell_PECBMS <- function(folder){
   
   ## Check whether required helper functions are available
   rtrim_shell_funNames <- c("fill_All_Indices_All_Trends",
@@ -21,6 +31,10 @@ runRtrimShell_PECBMS <- function(){
                 paste(missingFun, collapse = ", "),
                 ". \nThese functions are provided in the script x3_functions_Shell_Rtrim.R"))
   }
+  
+  # ----------------------------------------------------------------------------
+  # START OF CODE FROM PECBMS
+  #-----------------------------------------------------------------------------
   
   #####################################################################################################################
   # RTRIM-shell. Version RTRIM-shell_v1.7
@@ -113,25 +127,19 @@ runRtrimShell_PECBMS <- function(){
   #####################################################################################################################
   # 1/06/2020 Eva Silarova unified upper and lower cases in variable names - v1.1
 
-  # Select the directory which contains the RTRIM output files
-  # This directory also contains the files with arguments used in the rtrim function.
-  folder <- "D://RTRIM-shell//02_RTRIM_shell_v1.7_scripts//shell"  # !! user dependent!! 
-  # folder <- choose.dir(default ="C://your_path_to_working_folder_with_input_data", caption = "Select directory which contains data which has been analysed")
-  setwd(folder)
-  
   # Select all files in the directory which contain arguments.
   # The files can be recognized by the pattern "arg_input_arguments".
   listSpeciesStratumCombinations <- dir(folder, pattern = "arg_input_stratum.csv")
   
   # The number of files in the directory.                                                
-  numberSpeciesStratumCombinations <- length (listSpeciesStratumCombinations)
+  numberSpeciesStratumCombinations <- length(listSpeciesStratumCombinations)
   
   # Make a table for an overview. 
   # The table lists which analyses were successful or not for all runs.
   
   overview <- makeOverview(listSpeciesStratumCombinations)
   # The code of this function can be found in functions_Shell_Rtrim.R.
-  # The source command (see above) makes it possible to use this function in this code.
+  # The source command in the main script makes it possible to use this function in this code.
   
   #####################################################################################################################
   # READING ARGUMENT AND COUNT FILES. 
@@ -141,11 +149,10 @@ runRtrimShell_PECBMS <- function(){
     
     cat("Processing", listSpeciesStratumCombinations[j], "\n") # 19/07/2022 John Kennedy inserted instrumentation to find out what species/attempt each warning was for - v1.6
     
-    # j<- 1
-    
+
     # The file with arguments contains the information to analyse the counts for a particular combination of species and stratum. 
     # The arguments are used when calling the function 'rtrim'
-    arguments <- read.csv2(listSpeciesStratumCombinations[j], header = TRUE, stringsAsFactors = FALSE)
+    arguments <- read.csv2(paste0(folder, "/", listSpeciesStratumCombinations[j]), header = TRUE, stringsAsFactors = FALSE)
     
     arguments<-as.list(arguments)                                                  # Enables the script to read the change points properly, 
     if(!arguments$Changepoints%in%c("all","auto")) {                               # when they are specified in the ?_arg_input_stratum.csv? file as comma-separated numbers.
@@ -156,10 +163,10 @@ runRtrimShell_PECBMS <- function(){
     # The file with counts contains the counts for a particular combination of species and stratum.
     # Weights may also be present in this file.
     #13/01/2023 Javier Rivas: I have modified the following lines to ensure that independently of the decimal symbol the counts$count variable is loaded as numeric
-    counts <- read.table(paste(arguments$File, "_counts.csv", sep = ""), stringsAsFactors = FALSE, header = TRUE, dec = ".",sep=";")   
+    counts <- read.table(paste0(folder, "/", arguments$File, "_counts.csv"), stringsAsFactors = FALSE, header = TRUE, dec = ".",sep=";")   
     
     if(is.character(counts$count)==T){
-      counts <- read.table(paste(arguments$File, "_counts.csv", sep = ""), stringsAsFactors = FALSE, header = TRUE, dec = ",",sep=";")   
+      counts <- read.table(paste0(folder, "/", arguments$File, "_counts.csv"), stringsAsFactors = FALSE, header = TRUE, dec = ",",sep=";")   
     }
     
     # 13/01/2023 end of modifications 
@@ -202,7 +209,7 @@ runRtrimShell_PECBMS <- function(){
     
     if (class(result) == "trim") {
       
-      save(x = result,  file = paste(arguments$File, ".RData", sep = ""))
+      save(x = result,  file = paste0(folder, "/", arguments$File, ".RData"))
       overview$attempt_1[overview$ss_combinations == arguments$File] <- "success"
       overview$success[overview$ss_combinations == arguments$File] <- "yes"
       
@@ -236,7 +243,7 @@ runRtrimShell_PECBMS <- function(){
       
       if (class(result) == "trim") {
         
-        save(x = result,  file = paste(arguments$File, ".RData", sep = ""))
+        save(x = result,  file = paste0(folder, "/", arguments$File, ".RData"))
         overview$attempt_2[overview$ss_combinations == arguments$File] <- "success"
         overview$success[overview$ss_combinations == arguments$File] <- "yes"
         
@@ -274,7 +281,7 @@ runRtrimShell_PECBMS <- function(){
         
         if (class(result) == "trim") {
           
-          save(x = result,  file = paste(arguments$File, ".RData", sep = ""))
+          save(x = result,  file = paste0(folder, "/", arguments$File, ".RData"))
           overview$attempt_3[overview$ss_combinations == arguments$File] <- "success"
           overview$success[overview$ss_combinations == arguments$File] <- "yes"
           
@@ -305,7 +312,7 @@ runRtrimShell_PECBMS <- function(){
           
           if (class(result) == "trim") {
             
-            save(x = result,  file = paste(arguments$File, ".RData", sep = ""))
+            save(x = result,  file = paste0(folder, "/", arguments$File, ".RData"))
             overview$attempt_4[overview$ss_combinations == arguments$File] <- "success"
             overview$success[overview$ss_combinations == arguments$File] <- "yes"
             
@@ -329,7 +336,7 @@ runRtrimShell_PECBMS <- function(){
   # WRITING OVERVIEW OF RTRIM SUCCESSES and FAILURES.  
   #####################################################################################################################
   overview <- overview[order(overview$species_number, overview$stratum_number), ]
-  write.table(overview, "overview.csv", row.names = FALSE,sep=";",dec=".")   #13/01/2023 Javier Rivas: Changes to produce outputs with dots
+  write.table(overview, paste0(folder, "/overview.csv"), row.names = FALSE, sep = ";", dec = ".")   #13/01/2023 Javier Rivas: Changes to produce outputs with dots
   
   
 }
