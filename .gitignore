@@ -47,6 +47,9 @@ vignettes/*.pdf
 # CSV files
 *.csv
 
+# Excel files
+*.xlsx 
+
 # Original code/files from Diego/PECBMS
 /Code_from_Diego/
 
