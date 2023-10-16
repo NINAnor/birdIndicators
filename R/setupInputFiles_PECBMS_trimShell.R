@@ -16,6 +16,7 @@
 
 setupInputFiles_PECBMS_trimShell <- function(Spp_selection, folderPath){
   
+
   ## Add the species-specific starting year ("Year_from" variable)
   Spp_selection <- Spp_selection %>%
     dplyr::mutate(Year_from = dplyr::case_when(Year_First %in% c(2006, 2007) ~ 2007,

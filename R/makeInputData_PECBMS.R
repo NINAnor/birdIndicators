@@ -30,10 +30,10 @@ makeInputData_PECBMS <- function(Trim_data, Spp_selection, convertNA = TRUE, sav
     dplyr::mutate(EURINGCode = Species_nr) %>%
     dplyr::inner_join(Spp_selection, by = "EURINGCode") 
   
-  ## Optional: save complete dataset
+  ## Optional: save complete dataset for PECBMS species
   if(save_allSppData){
-    write.csv2(PECBMS_data, paste0("Selected_species_to_PECBMS_", lubridate::year(Sys.Date()), ".csv"), row.names = F)
-    saveRDS(PECBMS_data, file = paste0("Selected_species_to_PECBMS_", lubridate::year(Sys.Date()), ".rds"))
+    write.csv2(subset(PECBMS_data, PECBMS), paste0("Selected_species_to_PECBMS_", lubridate::year(Sys.Date()), ".csv"), row.names = F)
+    saveRDS(subset(PECBMS_data, PECBMS), file = paste0("Selected_species_to_PECBMS_", lubridate::year(Sys.Date()), ".rds"))
   }
   
   ## Optional: convert -1 counts to NA
@@ -41,7 +41,7 @@ makeInputData_PECBMS <- function(Trim_data, Spp_selection, convertNA = TRUE, sav
     PECBMS_data$Count[which(PECBMS_data$Count == -1)] <- NA
   }
   
-  ## Filter and reformat input data tp match required format
+  ## Filter and reformat input data to match required format
   input_Trim <- PECBMS_data %>% 
     dplyr::select(Site, Year, EURINGCode, Count, Year_First) %>% # Drop unnecessary columns
     dplyr::rename(year = Year,
