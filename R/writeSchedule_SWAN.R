@@ -1,5 +1,24 @@
+#' Write schedule table for RSWAN Analyses
+#'
+#' @param working_folder character. Path to the working folder which contains
+#' the PECBMS Trim results files for data from Hekkefuglovervåkingen and the 
+#' predecessor monitoring. 
+#' @param general_folder character. Path to the folder containing .csv files 
+#' provided by PECBMS for RSWAN analyses. This function requires the files
+#' "Swan_schedules.csv" and "Swan_schedules_comb.csv". 
+#' @param MSI_speciesList character vector containing EURING codes of species to
+#' include in RSWAN analyses. For Norway, this includes 55 species. 
+#' @param loadSchedule logical. Whether to load a previously written schedule
+#' table (TRUE) or instead reassemble a schedule table based on available data
+#' files (FALSE).
+#'
+#' @return Writes a schedule table into the general_folder directory under the
+#' names "Swan_schedules.csv" and "Swan_schedules_combine.csv".
+#' @export
+#'
+#' @examples
 
-writeSWANSchedule <- function(working_folder, general_folder, MSI_speciesList, loadSchedule){
+writeSchedule_SWAN <- function(working_folder, general_folder, MSI_speciesList, loadSchedule){
   
   ## List all present data files
   patron <- (".*\\_indices_TT.csv")

@@ -99,8 +99,8 @@ collectSpeciesFiles_Legacy(origin_folder = legacyFile_folder,
 working_folder = paste0(folder, "/", subFolderName)
 
 ## Write/load schedule table
-writeSWANSchedule(working_folder = working_folder, 
-                  general_folder = "data",
-                  MSI_speciesList = sppLists$sppLists$MSI,
-                  loadSchedule = FALSE)
+writeSchedule_SWAN(working_folder = working_folder, 
+                   general_folder = "data",
+                   MSI_speciesList = sppLists$sppLists$MSI,
+                   loadSchedule = FALSE)
 
