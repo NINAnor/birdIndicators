@@ -89,5 +89,18 @@ collectSpeciesFiles_PECBMS(folder = folder,
 ## Retrieve equivalent file from predecessor monitoring programme
 legacyFile_folder <- "P:/41201612_naturindeks_2021_2023_database_og_innsynslosning/Hekkefugl_Dataflyt/LegacyFiles_PECBMS_Trim"
 collectSpeciesFiles_Legacy(origin_folder = legacyFile_folder,
-                           target_folder = folder)
+                           target_folder = paste0(folder, "/", subFolderName))
+
+#------------------------#
+# PECBMS RSWAN execution #
+#------------------------#
+
+## Set working folder
+working_folder = paste0(folder, "/", subFolderName)
+
+## Write/load schedule table
+writeSWANSchedule(working_folder = working_folder, 
+                  general_folder = "data",
+                  MSI_speciesList = sppLists$sppLists$MSI,
+                  loadSchedule = FALSE)
 
