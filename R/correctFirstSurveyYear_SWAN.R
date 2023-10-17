@@ -1,5 +1,25 @@
+#' Adds truncation of first survey year for specified species
+#' 
+#' This is a function wrapper for the PECBMS code file "01_CODE_adding_FirstSurvey_YEAR_OK.R"
+#'
+#' @param general_folder character. Path to the folder containing files 
+#' provided by PECBMS for RSWAN analyses. This function requires the files
+#' "Species_Countries.csv" and "New_notorics_2022.xlsx". 
+#' @param working_folder character. Path to the working folder which contains
+#' the PECBMS Trim results files for data from Hekkefuglovervåkingen and the 
+#' predecessor monitoring.
+#'
+#' @return
+#' @export
+#'
+#' @examples
 
-addFirstSurveyYear_SWAN <- function(general_folder, working_folder){
+correctFirstSurveyYear_SWAN <- function(general_folder, working_folder){
+  
+  
+  ## Add "/" to folder names for it to work with code
+  general_folder <- paste0(general_folder, "/")
+  working_folder <- paste0(working_folder, "/")
   
   # ----------------------------------------------------------------------------
   # START OF CODE FROM PECBMS
@@ -9,7 +29,7 @@ addFirstSurveyYear_SWAN <- function(general_folder, working_folder){
   
   #Now we will add the exemption included in the table, for those species which normally needs to be truncated.
   #1st loading the data, be carefull with the route of the file.
-  exemptions <- read_excel(paste0(general_folder,"New_notorics_2022.xlsx"))
+  exemptions <- readxl::read_excel(paste0(general_folder,"New_notorics_2022.xlsx"))
   
   
   #LOOP: This loop currently uses the combination of species code and country code wich are in the same lane of the species_country file, this make the loop
@@ -19,14 +39,14 @@ addFirstSurveyYear_SWAN <- function(general_folder, working_folder){
   for (i in 1:nrow(species_country)){
     
     try({
-      x<-read.csv(paste0(working_folder,species_country$Species_nr[i],"_1_",species_country$Country_code[i],"_indices_TT.csv"),header = T, sep = ";")
-      species_country$Year_first[i]<-min(x$Year)
+      x <- read.csv(paste0(working_folder, species_country$Species_nr[i], "_1_", species_country$Country_code[i], "_indices_TT.csv"), header = T, sep = ";")
+      species_country$Year_first[i] <- min(x$Year)
       if(max(x$Year)>2021){
-        species_country$Year_last[i]=2021
+        species_country$Year_last[i] = 2021
       }else{
-        species_country$Year_last[i]<-max(x$Year)
+        species_country$Year_last[i] <- max(x$Year)
       }
-    },silent = T)
+    }, silent = T)
   }
   
   
@@ -37,25 +57,24 @@ addFirstSurveyYear_SWAN <- function(general_folder, working_folder){
   for(i in 1:nrow(exemptions)){
     for (j in 1:nrow(species_country)) {
       try({ 
-        if (exemptions$Species_name[i]== species_country$Species_nr[j]){
-          if (exemptions$Country_code[i]== species_country$Country_code[j]){
-            # print(paste0("the species ",exemptions$SciName[i]," in ",exemptions$Country[i], " has changed from ",species_country$Year_first[j] ," to ", exemptions$Year_First[i]))
-            print(paste0("the species ",exemptions$Sci_name[i]," in ",exemptions$Country_name[i], " has changed from ",species_country$Year_last[j] ," to ", exemptions$Year_last[i]))
+        if (exemptions$Species_name[i] == species_country$Species_nr[j]){
+          if (exemptions$Country_code[i] == species_country$Country_code[j]){
+
+            print(paste0("the species ", exemptions$Sci_name[i], " in ", exemptions$Country_name[i], " has changed from ", species_country$Year_last[j] , " to ", exemptions$Year_last[i]))
             
-            species_country$Year_first[j]<-exemptions$Year_first[i]
-            species_country$Year_last[j]<-exemptions$Year_last[i]
+            species_country$Year_first[j] <- exemptions$Year_first[i]
+            species_country$Year_last[j] <- exemptions$Year_last[i]
             
           }
         }
-      },silent = T)
+      }, silent = T)
     }
   }
   
-  str(species_country)
-  species_country$`Population size (geomean)`=as.numeric(species_country$`Population size (geomean)`)
-  species_country$`Population size_min`=as.numeric(species_country$`Population size_min`)
-  species_country$`Population size_max`=as.numeric(species_country$`Population size_max`)
-  #Now we are checking wether our loops worked properly or not. each loop is writen to give you an error message locating the indices TT folder or 
+  species_country$`Population size (geomean)` = as.numeric(species_country$`Population size (geomean)`)
+  species_country$`Population size_min` = as.numeric(species_country$`Population size_min`)
+  species_country$`Population size_max` = as.numeric(species_country$`Population size_max`)
+  #Now we are checking whether our loops worked properly or not. each loop is writen to give you an error message locating the indices TT folder or 
   #the species and the conflicted years
   #This loop compare the value of Year_first for each species and Year located in first position [1] in its particular indices_TT files
   #The only printed errors should be the pairs "species&countries" within the exemption files.
@@ -86,7 +105,8 @@ addFirstSurveyYear_SWAN <- function(general_folder, working_folder){
   #This export the Species_Country file, directly to the general folder NO THE BACKUP ONE that REMAINS INTACT
   #CHANGE URL!!!!!!!!!!!!!!!!!!!!!!!
   
-  write.table(species_country, paste0(general_folder,"Species_Countries.csv"),  dec=".",sep=";",row.names=FALSE)   
+  write.table(species_country, paste0(general_folder,"Species_Countries.csv"),  
+              dec = ".", sep = ";", row.names = FALSE)   
   
   #8310_1_20_indices_TT.csv Netherlands alcedo atis
   #9720_1_4_indices_TT.csv Czech rpublic Galerida cristata
@@ -95,6 +115,10 @@ addFirstSurveyYear_SWAN <- function(general_folder, working_folder){
   #11460_1_20_indices_TT.csvNetherlands	Oenanthe oenanthe
   
   # This files, despite been in the combination of the species codes and countries code in the species_working file, do no exist as indices_TT.csv file
+  
+  # ----------------------------------------------------------------------------
+  # END OF CODE FROM PECBMS
+  #-----------------------------------------------------------------------------
   
   
 }

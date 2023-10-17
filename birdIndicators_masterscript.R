@@ -10,6 +10,7 @@ library(sf)
 library(lubridate)
 library(xtable)
 library(rtrim)
+library(readxl)
 
 ## Source all functions in "R" folder
 sourceDir <- function(path, trace = TRUE, ...) {
@@ -91,16 +92,24 @@ legacyFile_folder <- "P:/41201612_naturindeks_2021_2023_database_og_innsynslosni
 collectSpeciesFiles_Legacy(origin_folder = legacyFile_folder,
                            target_folder = paste0(folder, "/", subFolderName))
 
-#------------------------#
-# PECBMS RSWAN execution #
-#------------------------#
+#--------------------------#
+# PECBMS RSWAN preparation #
+#--------------------------#
 
-## Set working folder
+## Set general and working folders
+general_folder = "data"
 working_folder = paste0(folder, "/", subFolderName)
 
 ## Write/load schedule table
 writeSchedule_SWAN(working_folder = working_folder, 
-                   general_folder = "data",
+                   general_folder = general_folder,
                    MSI_speciesList = sppLists$sppLists$MSI,
                    loadSchedule = FALSE)
 
+## Truncate first survey year where neccessary
+correctFirstSurveyYear_SWAN(general_folder = general_folder, 
+                            working_folder = working_folder)
+
+#------------------------#
+# PECBMS RSWAN execution #
+#------------------------#
