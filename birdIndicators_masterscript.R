@@ -86,4 +86,8 @@ subFolderName <- "Species_files"
 collectSpeciesFiles_PECBMS(folder = folder, 
                            subFolderName = subFolderName)
 
+## Retrieve equivalent file from predecessor monitoring programme
+legacyFile_folder <- "P:/41201612_naturindeks_2021_2023_database_og_innsynslosning/Hekkefugl_Dataflyt/LegacyFiles_PECBMS_Trim"
+collectSpeciesFiles_Legacy(origin_folder = legacyFile_folder,
+                           target_folder = folder)
 
