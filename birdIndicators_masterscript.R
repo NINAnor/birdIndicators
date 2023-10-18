@@ -11,6 +11,7 @@ library(lubridate)
 library(xtable)
 library(rtrim)
 library(readxl)
+library(data.table)
 
 ## Source all functions in "R" folder
 sourceDir <- function(path, trace = TRUE, ...) {
