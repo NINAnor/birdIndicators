@@ -97,18 +97,18 @@ collectSpeciesFiles_Legacy(origin_folder = legacyFile_folder,
 #--------------------------#
 
 ## Set general and working folders
-general_folder = "data"
-working_folder = paste0(folder, "/", subFolderName)
+general_folder_rel <- "data"
+working_folder_rel <- paste0(folder, "/", subFolderName)
 
 ## Write/load schedule table
-writeSchedule_SWAN(working_folder = working_folder, 
-                   general_folder = general_folder,
+writeSchedule_SWAN(working_folder = working_folder_rel, 
+                   general_folder = general_folder_rel,
                    MSI_speciesList = sppLists$sppLists$MSI,
                    loadSchedule = FALSE)
 
 ## Truncate first survey year where neccessary
-correctFirstSurveyYear_SWAN(general_folder = general_folder, 
-                            working_folder = working_folder)
+correctFirstSurveyYear_SWAN(general_folder = general_folder_rel, 
+                            working_folder = working_folder_rel)
 
 #------------------------#
 # PECBMS RSWAN execution #
@@ -116,10 +116,23 @@ correctFirstSurveyYear_SWAN(general_folder = general_folder,
 
 ## Retrieve complete data paths (PECBMS' RSWAN scripts are not compatible with 
 ## relative paths and they repeatedly use setwd() to toggle between folders)
-general_folder_abs <- paste0(getwd(), "/", general_folder)
-working_folder_abs <- paste0(getwd(), "/", working_folder)
+general_folder <- paste0(getwd(), "/", general_folder_rel)
+working_folder <- paste0(getwd(), "/", working_folder_rel)
+
+output_folder <- paste0(working_folder, "/output/") 
+output_folder2 <- paste0(working_folder, "/output") 
+
+if(file.exists(output_folder2)){ 
+  unlink(output_folder2, recursive = TRUE)
+}else{
+  dir.create(output_folder2)
+}
+
+# NOTE: The RSWAN scripts require that absolute folder paths are assigned to 
+# objects strictly named "general_folder", "working_folder", and "output_folder"
+# because some of the RSWAN helper functions use setwd() calls that refer to 
+# globally defined absolute paths. 
 
 ## Run RSWAN
-combineTimeSeries_SWAN(general_folder_abs = general_folder_abs,
-                       working_folder_abs = working_folder_abs)
-
+combineTimeSeries_SWAN(general_folder_abs = general_folder,
+                       working_folder_abs = working_folder)
