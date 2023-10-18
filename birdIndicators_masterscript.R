@@ -113,3 +113,13 @@ correctFirstSurveyYear_SWAN(general_folder = general_folder,
 #------------------------#
 # PECBMS RSWAN execution #
 #------------------------#
+
+## Retrieve complete data paths (PECBMS' RSWAN scripts are not compatible with 
+## relative paths and they repeatedly use setwd() to toggle between folders)
+general_folder_abs <- paste0(getwd(), "/", general_folder)
+working_folder_abs <- paste0(getwd(), "/", working_folder)
+
+## Run RSWAN
+combineTimeSeries_SWAN(general_folder_abs = general_folder_abs,
+                       working_folder_abs = working_folder_abs)
+
