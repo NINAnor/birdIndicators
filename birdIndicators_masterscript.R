@@ -195,3 +195,12 @@ MSI_results <- list(MSI_baseline1996 = MSI_longTerm,
 
 saveRDS(MSI_results, file = paste0(MSI_results_folder, "/MSI_results.rds"))
 
+
+#----------------------------------#
+# Plot Multispecies Indices (MSIs) #
+#----------------------------------#
+
+plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline2008,
+        results_folder = MSI_results_folder,
+        plot_name = "MSI_base2008_AllEcosystems")
+
