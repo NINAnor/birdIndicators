@@ -13,14 +13,23 @@
 
 
 
-calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName){
+calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName, results_folder){
+  
+  #-------#
+  # SETUP #
+  #-------#
+  
+  ## Check if results folder exists and create if not
+  if(!dir.exists(results_folder)){
+    dir.create(results_folder)
+  }
   
   #------------------#
   # DATA PREPATATION #
   #------------------#
   
   ## Load the index data and reformat columns
-  CombinedIndex <- read_csv2(paste0(working_folder, "output/COMB_Trimind.csv")) %>%
+  CombinedIndex <- read_csv2(paste0(working_folder, "/output/COMB_Trimind.csv")) %>%
     dplyr::mutate(Index = as.numeric(Index),
                   Index_SE = as.numeric(Index_SE))
                              
@@ -48,7 +57,8 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName){
   SppFiles <- NULL
   
   for(i in 1:length(Spp_subset)){
-    SppFiles[i] <- paste0(working_folder, "/", list.files(working_folder, pattern = paste0(Spp_subset[i], '_1_63_indices_TT.csv')))
+    #SppFiles[i] <- paste0(working_folder, "/", list.files(working_folder, pattern = paste0(Spp_subset[i], '_1_63_indices_TT.csv')))
+    SppFiles[i] <- paste0(working_folder, "/", list.files(working_folder, pattern = paste0("COMB_", Spp_subset[i], "_2_14_indices_TT.csv")))
   }
   
   ## Create input file
@@ -67,8 +77,8 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName){
     select(species, year, index, se)
   
   ## Write input files to .csv and .txt
-  write.csv(IndSpecies.dat, paste0(working_folder, "/", IndexName, "_indicators_", lubridate::year(Sys.Date()), ".csv"), row.names = F)
-  write.table(IndSpecies.dat, paste0(working_folder, "/", IndexName, "_indicators_", lubridate::year(Sys.Date()), ".csv"), row.names = F)
+  write.csv(IndSpecies.dat, paste0(results_folder, "/", IndexName, "_indicators_", lubridate::year(Sys.Date()), ".csv"), row.names = F)
+  write.table(IndSpecies.dat, paste0(results_folder, "/", IndexName, "_indicators_", lubridate::year(Sys.Date()), ".csv"), row.names = F)
   
   
   #-----------------#
@@ -134,16 +144,16 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName){
   INP5$se[INP5$index == TRUNC & !is.na(INP5$index)] <- 0
   
   # reset parameters
-  index <- as.vector(INP5["index"])
-  se <- as.vector(INP5["se"])
+  index <- INP5["index"]
+  se <- INP5["se"]
   nobs <- NROW(INP5)
   uspecies <- sort(unique(INP5$species))
   nspecies <- length(uspecies)
   year <- rep(uyear, nspecies)
   
   # Transform indices and standard deviations to log scale (Delta method)
-  LNindex <- as.vector(log(index))
-  LNse <- as.vector(se/index)
+  LNindex <- log(index)
+  LNse <- se/index
   
   # Monte Carlo simulations of species indices
   MC <- matrix(NA, nobs, nsim)
@@ -238,7 +248,8 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName){
           if ((SLOPE_mult - 1.96*sdSLOPE_mult - 0.95)*(1.05 - SLOPE_mult + 1.96*sdSLOPE_mult) < 0.00) { TrendClass <- "uncertain"} else
             if ((SLOPE_mult + 1.96*sdSLOPE_mult) - (SLOPE_mult - 1.96*sdSLOPE_mult) > 0.10) { TrendClass <- "uncertain" } else
             {TrendClass <- "stable"}
-  TrendClass
+  
+  message(paste0("Overall trend categorised as: ", TrendClass))
   
   # Short term linear trend per simulation
   lrMSI_short <- array(NA, dim=c(2, nsim))
@@ -270,7 +281,8 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName){
           if ((SLOPE_short_mult - 1.96*sdSLOPE_short_mult - 0.95)*(1.05 - SLOPE_short_mult + 1.96*sdSLOPE_short_mult) < 0.00) { TrendClass_short <- "uncertain"} else
             if ((SLOPE_short_mult + 1.96*sdSLOPE_short_mult) - (SLOPE_short_mult - 1.96*sdSLOPE_short_mult) > 0.10) { TrendClass_short <- "uncertain" } else
             {TrendClass_short <- "stable"}
-  TrendClass_short
+  
+  message(paste0("Short-term trend categorised as: ", TrendClass_short))
   
   # linear trend before changepoint per simulation
   lrMSI_before <- array(NA, dim=c(2, nsim))
@@ -303,7 +315,8 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName){
           if ((SLOPE_before_mult - 1.96*sdSLOPE_before_mult - 0.95)*(1.05 - SLOPE_before_mult + 1.96*sdSLOPE_before_mult) < 0.00) { TrendClass_before <- "uncertain"} else
             if ((SLOPE_before_mult + 1.96*sdSLOPE_before_mult) - (SLOPE_before_mult - 1.96*sdSLOPE_before_mult) > 0.10) { TrendClass_before <- "uncertain" } else
             {TrendClass_before <- "stable"}
-  TrendClass_before
+  
+  message(paste0("Trend before changepoint categorised as: ", TrendClass_before))
   
   # linear trend after changepoint per simulation
   lrMSI_after <- array(NA, dim=c(2, nsim))
@@ -336,7 +349,8 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName){
           if ((SLOPE_after_mult - 1.96*sdSLOPE_after_mult - 0.95)*(1.05 - SLOPE_after_mult + 1.96*sdSLOPE_after_mult) < 0.00) { TrendClass_after <- "uncertain"} else
             if ((SLOPE_after_mult + 1.96*sdSLOPE_after_mult) - (SLOPE_after_mult - 1.96*sdSLOPE_after_mult) > 0.10) { TrendClass_after <- "uncertain" } else
             {TrendClass_after <- "stable"}
-  TrendClass_after
+  
+  message(paste0("Trend after changepoint categorised as: ", TrendClass_after))
   
   # compare linear trends before and after changepoint
   compare <- array(NA, dim=c(nsim, 1))
@@ -454,12 +468,12 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName){
   RES <- as.data.frame(cbind(uyear, simMSImean, simMSIsd, lowCI_MSI, uppCI_MSI, trend_flex, lowCI_trend_flex, uppCI_trend_flex))
   RES$trend_class <- TrendClass_flex
   names(RES) <- c("year", "MSI", "sd_MSI", "lower_CL_MSI", "upper_CL_MSI", "Trend", "lower_CL_trend", "upper_CL_trend", "trend_class")
-  write.csv2(RES, file=jobnameRESULTS, row.names=FALSE, quote=FALSE)
+  write.csv2(RES, file=paste0(results_folder, "/", jobnameRESULTS), row.names=FALSE, quote=FALSE)
   
   # create output file with all linear trends
   SIMTRENDS <- t(rbind(lrMSI[1,],lrMSI_short[1,]))
   jobnameSIMTRENDS <- paste (jobname, "_SIMTRENDS.csv", sep = "")
-  write.csv2(SIMTRENDS, file=jobnameSIMTRENDS, row.names=FALSE)
+  write.csv2(SIMTRENDS, file=paste0(results_folder, "/", jobnameSIMTRENDS), row.names=FALSE)
   
   # create output for linear trend estimates and % change
   rownames <- rbind("overall trend","SE overall trend", "trend last years", "SE trend last years", "changepoint",
@@ -479,66 +493,66 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName){
   TRENDS[12, "significance"] <- significance_PCT_short
   names(TRENDS) <- c("value", "significance")
   jobnameTRENDS <- paste (jobname, "_TRENDS.csv", sep = "")
-  write.csv2(TRENDS, file=jobnameTRENDS)
+  write.csv2(TRENDS, file=paste0(results_folder, "/", jobnameTRENDS))
   
+  # graph without error bars
+  limits <- aes(ymax = simMSImean+simMSIsd, ymin=simMSImean-simMSIsd)
+  jobnameGRAPH <- paste (jobname, "_GRAPH.jpg", sep = "")
+  x_position <- ifelse(SLOPE>0, maxyear-nyear/1.5, minyear+1)
+  y_position <- 50
+  legend10 <- paste(nspecies, "species")
+  legend11 <- paste("overall trend:", round(SLOPE_mult*100-100, digits=1), "% / yr,", TrendClass)
+  legend12 <- paste("last", lastyears, "years:", round(SLOPE_short_mult*100-100, digits=1), "% / yr,", TrendClass_short)
+  ylab <- paste("MSI (",plotbaseyear+minyear-1,"= 100 )")
+  lastyear01 <- c(rep(0,nyear-lastyears), rep(1,lastyears))
+  ggplot(RES, aes(x=year, y=MSI))+
+    scale_color_manual(values=c("blue", "dark green"))+
+    geom_point(colour = "dark green",size=3)+
+    ylim(0, NA)+
+    ylab(ylab)+
+    ggtitle(jobname)+
+          theme(plot.title = element_text(size = 25, face = "bold"),
+          axis.title.x=element_blank(),
+          axis.title.y=element_text(size=20,face="bold"),
+          axis.text = element_text(size = 20),
+          panel.background = element_blank(),
+          panel.border = element_rect(colour = "black", fill=NA, size=1))+
+    geom_ribbon(aes(ymin=lowCI_trend_flex, ymax=uppCI_trend_flex), alpha=0.2)+
+    geom_line(aes(y=trend_flex), colour="dark green", size=1)+
+    annotate("text", x=x_position, y=y_position, label = legend10, size=7, fontface=2, hjust=0)+
+    annotate("text", x=x_position, y=y_position-15, label = legend11, size=7, hjust=0)+
+    annotate("text", x=x_position, y=y_position-30, label = legend12, size=7, hjust=0)
+  ggsave(paste0(results_folder, "/", jobnameGRAPH))
+
+
+
+  # graph with error bars
+  # limits <- aes(ymax = simMSImean+simMSIsd, ymin=simMSImean-simMSIsd)
+  jobnameGRAPH2 <- paste (jobname, "_GRAPH2.jpg", sep = "")
+  ggplot(RES, aes(x=year, y=MSI))+
+    scale_color_manual(values=c("blue", "dark green"))+
+    geom_point(colour = "dark green",size=3)+
+    ylim(0, NA)+
+    ylab(ylab)+
+    ggtitle(jobname)+
+    theme(plot.title = element_text(size = 25, face = "bold"),
+          axis.title.x=element_blank(),
+          axis.title.y=element_text(size=20,face="bold"),
+          axis.text = element_text(size = 20),
+          panel.background = element_blank(),
+          panel.border = element_rect(colour = "black", fill=NA, size=1))+
+    geom_ribbon(aes(ymin=lowCI_trend_flex, ymax=uppCI_trend_flex), alpha=0.2)+
+    geom_line(aes(y=trend_flex), colour="dark green", size=1)+
+    geom_pointrange(limits, colour="dark green")+
+  annotate("text", x=x_position, y=y_position, label = legend10, size=7, fontface=2, hjust=0)+
+  annotate("text", x=x_position, y=y_position-15, label = legend11, size=7, hjust=0)+
+  annotate("text", x=x_position, y=y_position-30, label = legend12, size=7, hjust=0)
+  ggsave(paste0(results_folder, "/", jobnameGRAPH2))
+
+  write.csv(meanMSI, paste0(results_folder, "/", jobname,'_meanMSI.csv'), row.names = F)
+  write.csv(stdevMSI, paste0(results_folder, "/", jobname,'_sdMSI.csv'), row.names = F)
 }
 
 
 
-# 
-# # graph without error bars
-# limits <- aes(ymax = simMSImean+simMSIsd, ymin=simMSImean-simMSIsd)
-# jobnameGRAPH <- paste (jobname, "_GRAPH.jpg", sep = "")
-# x_position <- ifelse(SLOPE>0, maxyear-nyear/1.5, minyear+1)
-# y_position <- 50
-# legend10 <- paste(nspecies, "species")
-# legend11 <- paste("overall trend:", round(SLOPE_mult*100-100, digits=1), "% / yr,", TrendClass)
-# legend12 <- paste("last", lastyears, "years:", round(SLOPE_short_mult*100-100, digits=1), "% / yr,", TrendClass_short)
-# ylab <- paste("MSI (",plotbaseyear+minyear-1,"= 100 )") 
-# lastyear01 <- c(rep(0,nyear-lastyears), rep(1,lastyears))
-# ggplot(RES, aes(x=year, y=MSI))+
-#   scale_color_manual(values=c("blue", "dark green"))+
-#   geom_point(colour = "dark green",size=3)+
-#   ylim(0, NA)+
-#   ylab(ylab)+
-#   ggtitle(jobname)+ 
-#         theme(plot.title = element_text(size = 25, face = "bold"),
-#         axis.title.x=element_blank(),
-#         axis.title.y=element_text(size=20,face="bold"),
-#         axis.text = element_text(size = 20),
-#         panel.background = element_blank(),
-#         panel.border = element_rect(colour = "black", fill=NA, size=1))+
-#   geom_ribbon(aes(ymin=lowCI_trend_flex, ymax=uppCI_trend_flex), alpha=0.2)+
-#   geom_line(aes(y=trend_flex), colour="dark green", size=1)+
-#   annotate("text", x=x_position, y=y_position, label = legend10, size=7, fontface=2, hjust=0)+
-#   annotate("text", x=x_position, y=y_position-15, label = legend11, size=7, hjust=0)+
-#   annotate("text", x=x_position, y=y_position-30, label = legend12, size=7, hjust=0)
-# ggsave(jobnameGRAPH)
-# 
-# 
-# 
-# # graph with error bars
-# # limits <- aes(ymax = simMSImean+simMSIsd, ymin=simMSImean-simMSIsd)
-# jobnameGRAPH2 <- paste (jobname, "_GRAPH2.jpg", sep = "")
-# ggplot(RES, aes(x=year, y=MSI))+
-#   scale_color_manual(values=c("blue", "dark green"))+
-#   geom_point(colour = "dark green",size=3)+
-#   ylim(0, NA)+
-#   ylab(ylab)+
-#   ggtitle(jobname)+ 
-#   theme(plot.title = element_text(size = 25, face = "bold"),
-#         axis.title.x=element_blank(),
-#         axis.title.y=element_text(size=20,face="bold"),
-#         axis.text = element_text(size = 20),
-#         panel.background = element_blank(),
-#         panel.border = element_rect(colour = "black", fill=NA, size=1))+
-#   geom_ribbon(aes(ymin=lowCI_trend_flex, ymax=uppCI_trend_flex), alpha=0.2)+
-#   geom_line(aes(y=trend_flex), colour="dark green", size=1)+
-#   geom_pointrange(limits, colour="dark green")+
-# annotate("text", x=x_position, y=y_position, label = legend10, size=7, fontface=2, hjust=0)+
-# annotate("text", x=x_position, y=y_position-15, label = legend11, size=7, hjust=0)+
-# annotate("text", x=x_position, y=y_position-30, label = legend12, size=7, hjust=0)
-# ggsave(jobnameGRAPH2)
-# 
-# write.csv(meanMSI, paste0(jobname,'_meanMSI.csv'), row.names = F)
-# write.csv(stdevMSI, paste0(jobname,'_sdMSI.csv'), row.names = F)
+

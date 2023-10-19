@@ -124,12 +124,9 @@ working_folder <- paste0(getwd(), "/", working_folder_rel)
 output_folder <- paste0(working_folder, "/output/") 
 output_folder2 <- paste0(working_folder, "/output") 
 
-if(file.exists(output_folder2)){ 
-  unlink(output_folder2, recursive = TRUE)
-}else{
+if(!file.exists(output_folder2)){ 
   dir.create(output_folder2)
 }
-
 # NOTE: The RSWAN scripts require that absolute folder paths are assigned to 
 # objects strictly named "general_folder", "working_folder", and "output_folder"
 # because some of the RSWAN helper functions use setwd() calls that refer to 
@@ -138,3 +135,17 @@ if(file.exists(output_folder2)){
 ## Run RSWAN
 combineTimeSeries_SWAN(general_folder_abs = general_folder,
                        working_folder_abs = working_folder)
+
+
+
+#--------------------------------------#
+# Multispecies Index (MSI) calculation #
+#--------------------------------------#
+
+MSI_results_folder <- "MSI_Results"
+
+calculateIndex_MultiSpecies(working_folder = working_folder_rel, 
+                            Spp_subset = sppLists$sppLists$MSI_farmland, 
+                            IndexName = "FarmlandBirds", 
+                            results_folder = MSI_results_folder)
+  

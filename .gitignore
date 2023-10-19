@@ -55,3 +55,6 @@ vignettes/*.pdf
 
 # PECBMS input and output files
 /PECBMS_Files
+
+# MSI results
+/MSI_Results
