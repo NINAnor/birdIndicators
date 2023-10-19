@@ -142,10 +142,56 @@ combineTimeSeries_SWAN(general_folder_abs = general_folder,
 # Multispecies Index (MSI) calculation #
 #--------------------------------------#
 
+## Set folder for storing results
 MSI_results_folder <- "MSI_Results"
 
-calculateIndex_MultiSpecies(working_folder = working_folder_rel, 
-                            Spp_subset = sppLists$sppLists$MSI_farmland, 
-                            IndexName = "FarmlandBirds", 
-                            results_folder = MSI_results_folder)
-  
+## Determine data range, base (= reference) year, and changepoint year
+useCombTS <- TRUE
+baseYear <- 1996
+changepointYear <- 2008
+
+## Attempt to calculate long-term MSIs for four ecosystems
+IndexNames <- c("FarmlandBirds", "ForestBirds", "MountainBirds", "WetlandBirds")
+Index_sppLists <- list(sppLists$sppLists$MSI_farmland,
+                       sppLists$sppLists$MSI_forest,
+                       sppLists$sppLists$MSI_mountain,
+                       sppLists$sppLists$MSI_wetlands)
+
+MSI_longTerm <- data.frame()
+for(i in 1:length(IndexNames)){
+  message(paste0(crayon::bold("Calculating ", IndexNames[i], " Index...")))
+  results <- calculateIndex_MultiSpecies(working_folder = working_folder_rel, 
+                                                 Spp_subset = Index_sppLists[[i]], 
+                                            IndexName = IndexNames[i], 
+                                            results_folder = MSI_results_folder,
+                                            useCombTS = useCombTS,
+                                            baseYear = baseYear,
+                                            changepointYear = changepointYear)
+  MSI_longTerm <- rbind(MSI_longTerm, results)
+  message("")
+}
+
+## Calculate long-term and mid-term MSIs for all ecosystems
+useCombTS <- c(TRUE, TRUE, FALSE, FALSE)
+baseYear <- 2008
+
+MSI_all <- data.frame()
+for(i in 1:length(IndexNames)){
+  message(paste0(crayon::bold("Calculating ", IndexNames[i], " Index...")))
+  results <- calculateIndex_MultiSpecies(working_folder = working_folder_rel, 
+                                            Spp_subset = Index_sppLists[[i]], 
+                                            IndexName = IndexNames[i], 
+                                            results_folder = MSI_results_folder,
+                                            useCombTS = useCombTS[i],
+                                            baseYear = baseYear,
+                                            changepointYear = changepointYear)
+  MSI_all <- rbind(MSI_all, results)
+  message("")
+}
+
+## Save results as .rds
+MSI_results <- list(MSI_baseline1996 = MSI_longTerm,
+                    MSI_baseline2008 = MSI_all)
+
+saveRDS(MSI_results, file = paste0(MSI_results_folder, "/MSI_results.rds"))
+
