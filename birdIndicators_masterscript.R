@@ -109,7 +109,8 @@ writeSchedule_SWAN(working_folder = working_folder_rel,
 
 ## Truncate first survey year where neccessary
 correctFirstSurveyYear_SWAN(general_folder = general_folder_rel, 
-                            working_folder = working_folder_rel)
+                            working_folder = working_folder_rel,
+                            maxYear = 2022)
 
 #------------------------#
 # PECBMS RSWAN execution #

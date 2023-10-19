@@ -8,13 +8,14 @@
 #' @param working_folder character. Path to the working folder which contains
 #' the PECBMS Trim results files for data from Hekkefuglovervåkingen and the 
 #' predecessor monitoring.
+#' @param maxYear integer. Latest year to include in analyses. 
 #'
 #' @return
 #' @export
 #'
 #' @examples
 
-correctFirstSurveyYear_SWAN <- function(general_folder, working_folder){
+correctFirstSurveyYear_SWAN <- function(general_folder, working_folder, maxYear){
   
   
   ## Add "/" to folder names for it to work with code
@@ -41,8 +42,8 @@ correctFirstSurveyYear_SWAN <- function(general_folder, working_folder){
     try({
       x <- read.csv(paste0(working_folder, species_country$Species_nr[i], "_1_", species_country$Country_code[i], "_indices_TT.csv"), header = T, sep = ";")
       species_country$Year_first[i] <- min(x$Year)
-      if(max(x$Year)>2021){
-        species_country$Year_last[i] = 2021
+      if(max(x$Year)>maxYear){
+        species_country$Year_last[i] = maxYear
       }else{
         species_country$Year_last[i] <- max(x$Year)
       }
