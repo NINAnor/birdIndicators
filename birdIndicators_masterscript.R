@@ -203,11 +203,13 @@ saveRDS(MSI_results, file = paste0(MSI_results_folder, "/MSI_results.rds"))
 ## Plot farmland and forest MSIs with baseline 1996
 plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline1996,
                    results_folder = MSI_results_folder,
-                   plot_name = "MSI_base1996_AllEcosystems")
+                   plot_name = "MSI_base1996_AllEcosystems", 
+                   displayPlots = TRUE)
 
 
 ## Plot all MSIs with baseline 2008
 plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline2008,
         results_folder = MSI_results_folder,
-        plot_name = "MSI_base2008_AllEcosystems")
+        plot_name = "MSI_base2008_AllEcosystems",
+        displayPlots = TRUE)
 
