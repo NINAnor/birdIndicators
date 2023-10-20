@@ -2,6 +2,9 @@
 #'
 #' @param Trim_data a tibble containing the Trim data for the relevant years including
 #' EURING codes.
+#' @param spp_DataPath character. The path to the folder holding the required 
+#' files 'species_table.rds', 'ReportSpeciesPECBMS2020.rds', and
+#' 'PECBMS_species_list_2022.rds'.
 #' @return a list containing a dataframe of EURING codes with inclusion info
 #' for the different workflow targets and relevant information and a list of
 #' lists of EURING codes for each target. 
@@ -9,16 +12,16 @@
 #'
 #' @examples
 
-makeSpeciesLists <- function(Trim_data){
+makeSpeciesLists <- function(Trim_data, spp_DataPath = "data"){
   
   ## Read in species table
-  file_sppTable_ALL <- "data/species_table.rds"
+  file_sppTable_ALL <- paste0(spp_DataPath, "/species_table.rds")
   sppTable_ALL <- readRDS(file_sppTable_ALL)
   
   
   ## Load additional information on PECBMS species
-  file_sppInfo_PECBMS <- "data/ReportSpeciesPECBMS2020.rds"
-  file_sppList_PECBMS <- "data/PECBMS_species_list_2022.rds"
+  file_sppInfo_PECBMS <- paste0(spp_DataPath, "/ReportSpeciesPECBMS2020.rds")
+  file_sppList_PECBMS <- paste0(spp_DataPath, "/PECBMS_species_list_2022.rds")
   
   sppInfo_PECBMS <- listSpecies_PECBMS(file_sppInfo_PECBMS = file_sppInfo_PECBMS, 
                                        file_sppList_PECBMS = file_sppList_PECBMS)
