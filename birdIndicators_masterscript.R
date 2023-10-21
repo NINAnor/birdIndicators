@@ -174,12 +174,12 @@ MSI_longTerm <- data.frame()
 for(i in 1:length(IndexNames)){
   message(paste0(crayon::bold("Calculating ", IndexNames[i], " Index...")))
   results <- calculateIndex_MultiSpecies(working_folder = working_folder_rel, 
-                                                 Spp_subset = Index_sppLists[[i]], 
-                                            IndexName = IndexNames[i], 
-                                            results_folder = MSI_results_folder,
-                                            useCombTS = useCombTS,
-                                            baseYear = baseYear,
-                                            changepointYear = changepointYear)
+                                         Spp_subset = Index_sppLists[[i]], 
+                                         IndexName = IndexNames[i], 
+                                         results_folder = MSI_results_folder,
+                                         useCombTS = useCombTS,
+                                         baseYear = baseYear,
+                                         changepointYear = changepointYear)
   MSI_longTerm <- rbind(MSI_longTerm, results)
   message("")
 }
@@ -217,12 +217,14 @@ saveRDS(MSI_results, file = paste0(MSI_results_folder, "/MSI_results.rds"))
 plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline1996,
                    results_folder = MSI_results_folder,
                    plot_name = "MSI_base1996_AllEcosystems", 
-                   displayPlots = TRUE)
+                   displayPlots = TRUE,
+                   savePDF = TRUE)
 
 
 ## Plot all MSIs with baseline 2008
 plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline2008,
         results_folder = MSI_results_folder,
         plot_name = "MSI_base2008_AllEcosystems",
-        displayPlots = TRUE)
+        displayPlots = TRUE,
+        savePDF = TRUE)
 

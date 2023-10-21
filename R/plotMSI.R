@@ -1,5 +1,5 @@
 
-plotTimeSeries_MSI <- function(MSI, results_folder, plot_name, displayPlots = FALSE){
+plotTimeSeries_MSI <- function(MSI, results_folder, plot_name, displayPlots = FALSE, savePDF = TRUE){
   
   ## Define custom colors
   plotCols <- colorspace::divergingx_hcl(palette = "Temps", n = length(unique(MSI$IndexName)))
@@ -29,16 +29,17 @@ plotTimeSeries_MSI <- function(MSI, results_folder, plot_name, displayPlots = FA
     theme(panel.grid.minor = element_blank(),
           axis.text.x = element_text(angle = 45, hjust = 1)) 
   
-  ## Plot to PDF (values only)
-  pdf(paste0(results_folder, "/", plot_name, ".pdf"), width = 10, height = 5)
-  print(p1)
-  dev.off()
-  
-  ## Plot to PDF (including smoothing)
-  pdf(paste0(results_folder, "/", plot_name, "_smooth.pdf"), width = 10, height = 5)
-  print(p2)
-  dev.off()
-  
+  ## Optional: plot to PDF
+  if(plotPDF){
+    pdf(paste0(results_folder, "/", plot_name, ".pdf"), width = 10, height = 5)
+    print(p1)
+    dev.off()
+    
+    pdf(paste0(results_folder, "/", plot_name, "_smooth.pdf"), width = 10, height = 5)
+    print(p2)
+    dev.off()
+  }
+
   ## Optional: display
   if(displayPlots){
     print(p1)
