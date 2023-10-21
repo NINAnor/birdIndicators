@@ -4,6 +4,9 @@
 #' @param maxYear integer. Latest year to include in data. 
 #' @param drop_negativeSpp logical. If TRUE (default), species with negative and
 #' 0 IDs get dropped from the data. If FALSE, all species are kept in data. 
+#' @param DriverName character. Name of the driver to use to access NINA database. 
+#' The default ("SQL Server") works for sessions run locally from NINA computers
+#' while "FreeTDS" is needed when running from the NINA RStudio server.
 #'
 #' @return a tibble containing the Trim data for the relevant years including
 #' EURING codes.
@@ -11,16 +14,17 @@
 #'
 #' @examples
 
-downloadData_TRIM <- function(minYear, maxYear, drop_negativeSpp = TRUE){
+downloadData_TRIM <- function(minYear, maxYear, drop_negativeSpp = TRUE, DriverName = "SQL Server"){
   
   ## Sort drivers
   sort(unique(odbcListDrivers()[[1]]))
   
   ## Connect to database
   con <- DBI::dbConnect(odbc(),
-                        Driver   = "SQL server", 
+                        Driver   = DriverName, 
                         Server   = "ninsql07.nina.no",
                         Database = "TOVTaksering",
+                        port = 1433,
                         Trusted_Connection = "True")
   
   ## Download Trim data
