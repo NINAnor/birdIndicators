@@ -30,7 +30,7 @@ plotTimeSeries_MSI <- function(MSI, results_folder, plot_name, displayPlots = FA
           axis.text.x = element_text(angle = 45, hjust = 1)) 
   
   ## Optional: plot to PDF
-  if(plotPDF){
+  if(savePDF){
     pdf(paste0(results_folder, "/", plot_name, ".pdf"), width = 10, height = 5)
     print(p1)
     dev.off()
