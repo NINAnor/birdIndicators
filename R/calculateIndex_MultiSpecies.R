@@ -96,6 +96,12 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName, r
            se = as.numeric(gsub(",", ".", se_ori))*100) %>%
     select(species, year, index, se)
   
+  ## Remove the year 2007 if it is the first year
+  if(min(IndSpecies.dat$year) == 2007){
+    IndSpecies.dat <- IndSpecies.dat %>%
+      dplyr::filter(year > 2007)
+  }
+  
   ## Write input files to .csv and .txt
   write.csv(IndSpecies.dat, paste0(results_folder, "/", IndexName, "_indicators_", lubridate::year(Sys.Date()), ".csv"), row.names = F)
   write.table(IndSpecies.dat, paste0(results_folder, "/", IndexName, "_indicators_", lubridate::year(Sys.Date()), ".csv"), row.names = F)
@@ -107,7 +113,7 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName, r
 
   ## Check if data includes the selected base and changepoint years
   if(!(between(baseYear, min(IndSpecies.dat$year), max(IndSpecies.dat$year)))){
-    baseYear <- ifelse(useCombTS, 1996, 2007)
+    baseYear <- ifelse(useCombTS, 1996, 2008)
     message("")
     message(paste0("Specified baseYear is beyond the year range of data provided. baseYear is therefore being changed to the default of ", baseYear, "."))
   }
@@ -321,39 +327,53 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName, r
   message(paste0("Short-term trend categorised as: ", TrendClass_short))
   
   # linear trend before changepoint per simulation
-  lrMSI_before <- array(NA, dim=c(2, nsim))
-  byear <- c(minyear:changepoint)
-  byears <- length(byear)
-  simMSI_before <- array(NA, dim=c(byears, nsim))
-  for (s in 1:nsim) {
-    for (y in 1:byears) {
-      simMSI_before[y, s] <- simMSI[y,s]
+  if(changepointYear > minyear){
+    
+    lrMSI_before <- array(NA, dim=c(2, nsim))
+    byear <- c(minyear:changepoint)
+    byears <- length(byear)
+    simMSI_before <- array(NA, dim=c(byears, nsim))
+    for (s in 1:nsim) {
+      for (y in 1:byears) {
+        simMSI_before[y, s] <- simMSI[y,s]
+      }
     }
+    for (s in 1:nsim) {
+      summb <- summary(lm(simMSI_before[,s] ~ byear, na.action=na.exclude))
+      lrMSI_before[1,s] <- round(summb$coefficients[2], digits=4)  # coeff[2] = slope
+      lrMSI_before[2,s] <- round(summb$coefficients[2,2], digits=4) 	# coeff[2,2] = sd of slope 
+    }
+    SLOPE_before <- round(mean(lrMSI_before[1,]), digits=5)
+    sdSLOPE_before <- round(sd(as.vector(lrMSI_before[1,])), digits=5)
+    
+    # Back-transform trends before changepoint to index scale
+    SLOPE_before_mult <- round(exp(SLOPE_before), digits=4)
+    sdSLOPE_before_mult <- round(sdSLOPE_before*SLOPE_before_mult, digits=4)
+    
+    # Trend classification before changepoint
+    TrendClass_before <- "X"
+    if (SLOPE_before_mult - 1.96*sdSLOPE_before_mult > 1.05) {TrendClass_before <- "strong increase" } else
+      if (SLOPE_before_mult + 1.96*sdSLOPE_before_mult < 0.95) { TrendClass_before <- "steep decline" } else
+        if (SLOPE_before_mult - 1.96*sdSLOPE_before_mult > 1.00) { TrendClass_before <- "moderate increase"} else
+          if (SLOPE_before_mult + 1.96*sdSLOPE_before_mult < 1.00) { TrendClass_before <- "moderate decline" } else
+            if ((SLOPE_before_mult - 1.96*sdSLOPE_before_mult - 0.95)*(1.05 - SLOPE_before_mult + 1.96*sdSLOPE_before_mult) < 0.00) { TrendClass_before <- "uncertain"} else
+              if ((SLOPE_before_mult + 1.96*sdSLOPE_before_mult) - (SLOPE_before_mult - 1.96*sdSLOPE_before_mult) > 0.10) { TrendClass_before <- "uncertain" } else
+              {TrendClass_before <- "stable"}
+    
+    message("")
+    message(paste0("Trend before changepoint categorised as: ", TrendClass_before))
+    
+  }else{
+    SLOPE_before <- NA
+    sdSLOPE_before <- NA
+    SLOPE_before_mult <- NA
+    sdSLOPE_before_mult <- NA
+    TrendClass_before <- NA
+    
+    message("")
+    message("No trend before changepoint calculated (changepoint = min. year).")
+    
   }
-  for (s in 1:nsim) {
-    summb <- summary(lm(simMSI_before[,s] ~ byear, na.action=na.exclude))
-    lrMSI_before[1,s] <- round(summb$coefficients[2], digits=4)  # coeff[2] = slope
-    lrMSI_before[2,s] <- round(summb$coefficients[2,2], digits=4) 	# coeff[2,2] = sd of slope 
-  }
-  SLOPE_before <- round(mean(lrMSI_before[1,]), digits=5)
-  sdSLOPE_before <- round(sd(as.vector(lrMSI_before[1,])), digits=5)
-  
-  # Back-transform trends before changepoint to index scale
-  SLOPE_before_mult <- round(exp(SLOPE_before), digits=4)
-  sdSLOPE_before_mult <- round(sdSLOPE_before*SLOPE_before_mult, digits=4)
-  
-  # Trend classification before changepoint
-  TrendClass_before <- "X"
-  if (SLOPE_before_mult - 1.96*sdSLOPE_before_mult > 1.05) {TrendClass_before <- "strong increase" } else
-    if (SLOPE_before_mult + 1.96*sdSLOPE_before_mult < 0.95) { TrendClass_before <- "steep decline" } else
-      if (SLOPE_before_mult - 1.96*sdSLOPE_before_mult > 1.00) { TrendClass_before <- "moderate increase"} else
-        if (SLOPE_before_mult + 1.96*sdSLOPE_before_mult < 1.00) { TrendClass_before <- "moderate decline" } else
-          if ((SLOPE_before_mult - 1.96*sdSLOPE_before_mult - 0.95)*(1.05 - SLOPE_before_mult + 1.96*sdSLOPE_before_mult) < 0.00) { TrendClass_before <- "uncertain"} else
-            if ((SLOPE_before_mult + 1.96*sdSLOPE_before_mult) - (SLOPE_before_mult - 1.96*sdSLOPE_before_mult) > 0.10) { TrendClass_before <- "uncertain" } else
-            {TrendClass_before <- "stable"}
-  
-  message("")
-  message(paste0("Trend before changepoint categorised as: ", TrendClass_before))
   
   # linear trend after changepoint per simulation
   lrMSI_after <- array(NA, dim=c(2, nsim))
@@ -392,16 +412,24 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName, r
   message("")
   
   # compare linear trends before and after changepoint
-  compare <- array(NA, dim=c(nsim, 1))
-  for (s in 1:nsim){
-    compare[s,1] <- lrMSI_after[1,s]-lrMSI_before[1,s]
+  if(changepointYear > minyear){
+    
+    compare <- array(NA, dim=c(nsim, 1))
+    for (s in 1:nsim){
+      compare[s,1] <- lrMSI_after[1,s]-lrMSI_before[1,s]
+    }
+    meanTrendDiff <- mean(compare)
+    seTrendDiff <- sd(as.vector(compare))
+    significance <- NA
+    if (abs(meanTrendDiff)-2.58*seTrendDiff > 0) { significance <- "p<0.01" } else
+      if (abs(meanTrendDiff)-1.96*seTrendDiff > 0) { significance <- "p<0.05" } else
+      {significance <- "n.s."}
+    
+  }else{
+    meanTrendDiff <- NA
+    seTrendDiff <- NA
+    significance <- NA
   }
-  meanTrendDiff <- mean(compare)
-  seTrendDiff <- sd(as.vector(compare))
-  significance <- NA
-  if (abs(meanTrendDiff)-2.58*seTrendDiff > 0) { significance <- "p<0.01" } else
-    if (abs(meanTrendDiff)-1.96*seTrendDiff > 0) { significance <- "p<0.05" } else
-    {significance <- "n.s."}
   
   # Smoothing
   # span = 0.75 is default in R and usually fits well. But trying other values may give better results, depending on your data

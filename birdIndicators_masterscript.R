@@ -171,7 +171,7 @@ Index_sppLists <- list(sppLists$sppLists$MSI_farmland,
                        sppLists$sppLists$MSI_wetlands)
 
 MSI_longTerm <- data.frame()
-for(i in 1:length(IndexNames)){
+for(i in 1:2){
   message(paste0(crayon::bold("Calculating ", IndexNames[i], " Index...")))
   results <- calculateIndex_MultiSpecies(working_folder = working_folder_rel, 
                                          Spp_subset = Index_sppLists[[i]], 
