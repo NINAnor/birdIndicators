@@ -73,7 +73,7 @@ if(!file.exists(output_folder2)){
 
 ## Download Trim data, incl. EURING codes, from database
 minYear <- 2006
-maxYear <- 2023
+maxYear <- 2022
 
 Trim_data <- downloadData_TRIM(minYear = minYear, maxYear = maxYear,
                                drop_negativeSpp = TRUE)
