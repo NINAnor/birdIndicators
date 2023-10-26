@@ -45,7 +45,7 @@ MSI_results_folder <- "MSI_Results"
 
 ## Set absolute directory/file paths
 
-# NINAs local storage of legacy Trim output files
+# NINAs local storage of legacy (1995 - 2008) Trim output files
 legacyFile_folder <- "P:/41201612_naturindeks_2021_2023_database_og_innsynslosning/Hekkefugl_Dataflyt/LegacyFiles_PECBMS_Trim"
 
 # Absolute data and output paths for RSWAN 
@@ -125,7 +125,7 @@ trimResults_PECBMS <- processRtrimOutput_PECBMS(folder = folder)
 collectSpeciesFiles_PECBMS(folder = folder, 
                            subFolderName = subFolderName)
 
-## Retrieve equivalent file from predecessor monitoring programme
+## Retrieve equivalent file from predecessor monitoring programme (legacy files)
 collectSpeciesFiles_Legacy(origin_folder = legacyFile_folder,
                            target_folder = paste0(folder, "/", subFolderName))
 
@@ -139,7 +139,7 @@ writeSchedule_SWAN(working_folder = working_folder_rel,
                    MSI_speciesList = sppLists$sppLists$MSI,
                    loadSchedule = FALSE)
 
-## Truncate first survey year where neccessary
+## Truncate first survey year where necessary
 correctFirstSurveyYear_SWAN(general_folder = general_folder_rel, 
                             working_folder = working_folder_rel,
                             maxYear = 2022)
