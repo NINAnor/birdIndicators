@@ -369,6 +369,7 @@ calculateIndex_MultiSpecies <- function(working_folder, Spp_subset, IndexName, r
     SLOPE_before_mult <- NA
     sdSLOPE_before_mult <- NA
     TrendClass_before <- NA
+    byears <- 1
     
     message("")
     message("No trend before changepoint calculated (changepoint = min. year).")
