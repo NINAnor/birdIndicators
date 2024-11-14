@@ -1449,8 +1449,8 @@ Rtrimcovin <- function(base_year) {  #Javi 21.09.2021
             arg_output_file$N_observed_positive_counts   <- sum(counts > 0)            # Number of positive counts in the entire period, in the counts file used.
             arg_output_file$N_missing_counts             <- sum(is.na(counts))         # Number of missing counts in the entire period, in the counts file used.
             arg_output_file$N_counts_total               <- sum(counts > 0)              # Total number of counts in the entire period, in the counts file used.
-            arg_output_file$Base_year_first_year         <- tt_indices[tt_indices$Index_imputed == 1 & tt_indices$Index_imputed_SE == 0, "Year"]  # for case of accidental more occurences of 100% Arco 16-2-2021
-            arg_output_file$Base_year_last_year          <- tt_indices[tt_indices$Index_imputed == 1 & tt_indices$Index_imputed_SE == 0, "Year"]  # for case of accidental more occurences of 100% Arco 16-2-2021
+            arg_output_file$Base_year_first_year         <- tt_indices[round(tt_indices$Index_imputed, digits = 10) == 1 & tt_indices$Index_imputed_SE == 0, "Year"]  # for case of accidental more occurences of 100% Arco 16-2-2021
+            arg_output_file$Base_year_last_year          <- tt_indices[round(tt_indices$Index_imputed, digits = 10) == 1 & tt_indices$Index_imputed_SE == 0, "Year"]  # for case of accidental more occurences of 100% Arco 16-2-2021
             arg_output_file$Changepoints                 <- paste(result$changepoints, collapse = "-")    # Changepoints used to calculate the indices. #29/03/2023 Javi Change points shall have - instead , as separator, function modified accordingly.
             
             slopes_imputed <- overall(result, which = "imputed")
