@@ -346,15 +346,15 @@ for(i in 1:nrow(directNI)){
   }
   
   # Check for availability of (combined) TRIM index data
-  spp_files <- list.files(working_folder)[which(grepl(directNI$EURINGCode[i], list.files(working_folder)))]
-  combTS <- ifelse(any(grepl("COMB", spp_files)), TRUE, FALSE)
+  spp_files <- list.files(working_folder)[which(grepl(paste0(directNI$EURINGCode[i], "_"), list.files(working_folder)))]
+  combTS <- ifelse(any(grepl(paste0("COMB_", directNI$EURINGCode[i], "_"), spp_files)), TRUE, FALSE)
   
   # Load relevant TRIM index data 
   message("Loading TRIM index data...")
   if(combTS){
-    index_TS_file <- spp_files[which(grepl("indices_TT", spp_files) & grepl("COMB", spp_files))]
+    index_TS_file <- spp_files[which(grepl(paste0("COMB_", directNI$EURINGCode[i], "_"), spp_files) & grepl("indices_TT", spp_files))]
   }else{
-    index_TS_file <- spp_files[which(grepl("indices_TT", spp_files))]
+    index_TS_file <- spp_files[which(startsWith(spp_files, paste0(directNI$EURINGCode[i], "_")) & grepl("indices_TT", spp_files))]
   }
   
   TrimIndex_data[[i]] <- read.csv(paste0(working_folder, "/", index_TS_file), sep = ";")
