@@ -161,7 +161,7 @@ combineTimeSeries_SWAN(general_folder_abs = general_folder,
 
 ## Determine data range, base (= reference) year, and changepoint year
 useCombTS <- TRUE
-baseYear <- 1996
+baseYear <- 2000 # Previously 1996
 changepointYear <- 2008
 
 ## Attempt to calculate long-term MSIs for four ecosystems
@@ -205,7 +205,7 @@ for(i in 1:length(IndexNames)){
 
 
 ## Save results as .rds
-MSI_results <- list(MSI_baseline1996 = MSI_longTerm,
+MSI_results <- list(MSI_baseline2000 = MSI_longTerm,
                     MSI_baseline2008 = MSI_all)
 
 saveRDS(MSI_results, file = paste0(MSI_results_folder, "/MSI_results.rds"))
@@ -216,9 +216,9 @@ saveRDS(MSI_results, file = paste0(MSI_results_folder, "/MSI_results.rds"))
 #----------------------------------#
 
 ## Plot farmland and forest MSIs with baseline 1996
-plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline1996,
+plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline2000,
                    results_folder = MSI_results_folder,
-                   plot_name = "MSI_base1996_AllEcosystems", 
+                   plot_name = "MSI_base2000_AllEcosystems", 
                    displayPlots = TRUE,
                    savePDF = TRUE)
 
