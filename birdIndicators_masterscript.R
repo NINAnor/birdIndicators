@@ -325,6 +325,7 @@ UpdatedIndicator_data <- list()
 ## For each species:
 for(i in 1:nrow(directNI)){
   
+  message("")
   message(paste0("Preparing data for indicator: ", directNI$Species_Norwegian_NI[i]))
   
   # Download old indicator data from NI database
@@ -336,14 +337,17 @@ for(i in 1:nrow(directNI)){
   message("NI database contains the following ", length(areas), " area(s):")
   print(areas)
   
+  # Check whether TRIM data have been divided into sub-areas
+  subAreas <- ifelse(grepl("[A-Za-z]", directNI$EURINGCode[i]), TRUE, FALSE)
+  
+  if(length(areas) > 1 & subAreas){
+    message("Distinct indicator data has to be reported for mulitple areas. Functionality for this is not implemented yet, but will be added soon. For now, this indicator will be skipped.")
+    next()
+  }
+  
   #TODO: Once we have scripted the subpopulations for TRIM analyses, we have to
   # update this part to correctly deal with the different cases (one area, 
   # several areas but same values, several areas with distinct values)
-  
-  if(length(areas) > 1){
-    message("Indicator is defined for mulitple areas. Functionality for this is not implemented yet, but will be added soon. For now, this indicator will be skipped.")
-    next()
-  }
   
   # Check for availability of (combined) TRIM index data
   spp_files <- list.files(working_folder)[which(grepl(paste0(directNI$EURINGCode[i], "_"), list.files(working_folder)))]
@@ -355,6 +359,10 @@ for(i in 1:nrow(directNI)){
     index_TS_file <- spp_files[which(grepl(paste0("COMB_", directNI$EURINGCode[i], "_"), spp_files) & grepl("indices_TT", spp_files))]
   }else{
     index_TS_file <- spp_files[which(startsWith(spp_files, paste0(directNI$EURINGCode[i], "_")) & grepl("indices_TT", spp_files))]
+  }
+  
+  if(length(index_TS_file) > 1){
+    stop("Identification of correct TRIM index data file failed. Check presence of file and detection criteria.")
   }
   
   TrimIndex_data[[i]] <- read.csv(paste0(working_folder, "/", index_TS_file), sep = ";")
@@ -384,34 +392,48 @@ for(i in 1:nrow(directNI)){
     TrimIndex_averages <- rbind(TrimIndex_averages, avg_data)
   }
   
+  Indicator_prescaled_areas <- list()
   
-  # Extract reference proportion for the reference anchor year from old NI data
-  refProp_orig <- subset(OldIndicator_data[[i]]$indicatorValues, yearName == refAnchorYear)$verdi/100
+  for(a in 1:length(areas)){
+    
+    # Add area information to TRIM index data
+    TrimIndex_averages_add <- TrimIndex_averages %>%
+      dplyr::mutate(areaName = areas[a])
+    
+    # Extract reference proportion for the reference anchor year in the relevant area from old NI data
+    refProp_orig <- subset(OldIndicator_data[[i]]$indicatorValues, 
+                           yearName == refAnchorYear & areaName == areas[a])$verdi/100
+    
+    # Calculate and add reference value
+    message(paste0("Recalibrate reference value for area ", areas[a], "..."))
+    ref <- subset(TrimIndex_averages_add, Year == refAnchorYear) %>%
+      dplyr::mutate(mean = mean/refProp_orig,
+                    sd = sd/refProp_orig,
+                    lowerQuart = lowerQuart/refProp_orig,
+                    upperQuart = upperQuart/refProp_orig, 
+                    areaName = areas[a])
+    ref[,"Year"] <- "Referanseverdi"
+    
+    TrimIndex_averages_add <- rbind(TrimIndex_averages_add, ref)
+    
+    # Do pre-scaling and drop values not relevant for upload to NI database
+    message(paste0("Scale and format updated indicator data for area ", areas[a], "..."))
+    Indicator_prescaled_areas[[a]] <- TrimIndex_averages_add %>%
+      dplyr::mutate(mean = 100*mean/ref$mean,
+                    sd = 100*sd/ref$mean,
+                    lowerQuart = 100*lowerQuart/ref$mean,
+                    upperQuart = 100*upperQuart/ref$mean) %>%
+      dplyr::filter(Year %in% c("Referanseverdi", NI_years)) %>%
+      dplyr::rename(yearName = Year)
+  }
   
-  # Calculate and add reference value
-  message("Recalibrate reference value...")
-  ref <- subset(TrimIndex_averages, Year == refAnchorYear) %>%
-    dplyr::mutate(mean = mean/refProp_orig,
-                  sd = sd/refProp_orig,
-                  lowerQuart = lowerQuart/refProp_orig,
-                  upperQuart = upperQuart/refProp_orig)
-  ref[,"Year"] <- "Referanseverdi"
-  
-  TrimIndex_averages <- rbind(TrimIndex_averages, ref)
-  
-  # Do pre-scaling and drop values not relevant for upload to NI database
-  message("Scale and format updated indicator data...")
-  Indicator_prescaled <- TrimIndex_averages %>%
-    dplyr::mutate(mean = 100*mean/ref$mean,
-                  sd = 100*sd/ref$mean,
-                  lowerQuart = 100*lowerQuart/ref$mean,
-                  upperQuart = 100*upperQuart/ref$mean) %>%
-    dplyr::filter(Year %in% c("Referanseverdi", NI_years)) %>%
-    dplyr::rename(yearName = Year)
+  # Write list as a dataframe
+  Indicator_prescaled <- dplyr::bind_rows(Indicator_prescaled_areas)
+  row.names(Indicator_prescaled) <- NULL
   
   # Write updated indicator data in upload format
   Indicator_upload <- OldIndicator_data[[i]]$indicatorValues %>%
-    dplyr::left_join(Indicator_prescaled, by = "yearName") %>%
+    dplyr::left_join(Indicator_prescaled, by =c("yearName", "areaName")) %>%
     dplyr::mutate(update = ifelse(is.na(mean), FALSE, TRUE)) %>%
     dplyr::mutate(
       
@@ -421,8 +443,8 @@ for(i in 1:nrow(directNI)){
       ovre_Kvartil = ifelse(update, upperQuart, ovre_Kvartil),
       
       # Set data type for updated values
-      datatypeId = ifelse(update & yearId != "Referanseverdi", 3, datatypeId),
-      datatypeName = ifelse(update & yearId != "Referanseverdi", "Beregnet fra modeller", datatypeId),
+      datatypeId = ifelse(update & yearName != "Referanseverdi", 3, datatypeId),
+      datatypeName = ifelse(update & yearName != "Referanseverdi", "Beregnet fra modeller", datatypeName),
       
       # Remove no longer valid information on distributions
       distributionName = ifelse(update, NA, distributionName),
@@ -441,6 +463,10 @@ for(i in 1:nrow(directNI)){
     warning(paste0("Legacy custom distribution information is present for species ", directNI$Species_Norwegian_NI[i], ". Please review and delete information."))
   }
 }
+
+#TODO: Once we add the area-specific data, we have to go over 
+# UpdatedIndicator_data and "merge" the data for different areas of the same 
+# species.
 
 ## Write updated indicator data to csv for review
 if(!dir.exists(file.path("NI_indicatorData_forReview"))){
