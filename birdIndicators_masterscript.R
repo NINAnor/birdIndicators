@@ -266,7 +266,7 @@ expertJudge <- c("Acrocephalus schoenobaenus",
 
 otherUse <- c("Lagopus lagopus", 
               "Lagopus muta", 
-              "Lyrurus tetrix", 
+              "Tetrao tetrix", 
               "Tetrao urogallus")
 
 directNI <- listSpecies_NI(Spp_selection = Spp_selection,
