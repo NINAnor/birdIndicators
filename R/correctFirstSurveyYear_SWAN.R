@@ -42,7 +42,7 @@ correctFirstSurveyYear_SWAN <- function(general_folder, working_folder, maxYear)
     try({
       x <- read.csv(paste0(working_folder, species_country$Species_nr[i], "_1_", species_country$Country_code[i], "_indices_TT.csv"), header = T, sep = ";")
       species_country$Year_first[i] <- min(x$Year)
-      if(max(x$Year)>maxYear){
+      if(max(x$Year)<maxYear){
         species_country$Year_last[i] = maxYear
       }else{
         species_country$Year_last[i] <- max(x$Year)
@@ -107,6 +107,8 @@ correctFirstSurveyYear_SWAN <- function(general_folder, working_folder, maxYear)
   #CHANGE URL!!!!!!!!!!!!!!!!!!!!!!!
   
   write.table(species_country, paste0(general_folder,"Species_Countries.csv"),  
+              dec = ".", sep = ";", row.names = FALSE)   
+  write.table(species_country, paste0(general_folder,"Species_Countries.txt"),  
               dec = ".", sep = ";", row.names = FALSE)   
   
   #8310_1_20_indices_TT.csv Netherlands alcedo atis
