@@ -33,11 +33,13 @@ sourceDir('R')
 # Storage of raw PECBMS Trim outputs
 folder <- "PECBMS_Files" 
 
-folderN <- 'NI_regions_files/Species_filesN'
-folderS <- 'NI_regions_files/Species_filesS'
-folderS_only <- 'NI_regions_files/Species_filesS_only'
-folderGrouse <- 'NI_regions_files/Species_files_Grouse'
-folderHele <- 'NI_regions_files/Species_files_HeleNorge'
+if(!dir.exists("NI_regions_files")){dir.create("NI_regions_files")}
+
+folderN <- "NI_regions_files/Species_filesN"
+folderS <- "NI_regions_files/Species_filesS"
+folderS_only <- "NI_regions_files/Species_filesS_only"
+folderGrouse <- "NI_regions_files/Species_files_Grouse"
+folderHele <- "NI_regions_files/Species_files_HeleNorge"
 
 
 # Storage of processed PECBMS Trim outputs
@@ -103,32 +105,76 @@ Trim_data <- Trim_data %>%
                              TRUE ~'North'))
 
 
-#-----------------------#
-# PECBMS Analysis setup #
-#-----------------------#
+#---------------------------------#
+# Main run: PECBMS Analysis setup #
+#---------------------------------#
 
 ## Get species lists
 sppLists <- makeSpeciesLists(Trim_data = Trim_data)
 Spp_selection <- sppLists$sppData
 
+## Write PECBMS arguments input files for each species
+argument_file <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection,
+                                                  folderPath = folder)
+
+## Subset data to contain only relevant species
+PECBMS_data <- makeInputData_PECBMS(Trim_data = Trim_data,
+                                    Spp_selection = Spp_selection,
+                                    convertNA = TRUE, 
+                                    save_allSppData = TRUE, returnData = TRUE)
+
+#----------------------------#
+# Main run: PECBMS Trim runs #
+#----------------------------#
+
+## Run analyses using the PECBMS Rtrim shell
+runRtrimShell_PECBMS(folder = folder)
+
+
+#---------------------------------------#
+# Main run: Process PECBMS Trim results #
+#---------------------------------------#
+
+## Process results
+trimResults_PECBMS <- processRtrimOutput_PECBMS(folder = folder)
+
+
+#------------------------------------------#
+# Main run: Post-processing: collect files #
+#------------------------------------------#
+
+## Collect (and rename) species and summary files
+collectSpeciesFiles_PECBMS(folder = folder, 
+                           subFolderName = subFolderName)
+
+## Retrieve equivalent file from predecessor monitoring programme (legacy files)
+collectSpeciesFiles_Legacy(origin_folder = legacyFile_folder,
+                           target_folder = paste0(folder, "/", subFolderName))
+
+
+
+#-------------------------------------#
+# Nature Index: PECBMS Analysis setup #
+#-------------------------------------#
+
 ## For NI: Select species where indexes have to be calculated with data split into N and S datasets
 Spp_selection_N_S <- Spp_selection %>%
-  filter(!is.na(dataUse_direct_NN) & !is.na(dataUse_direct_SN))
+  filter(dataUse_direct_NN & dataUse_direct_SN)
 
 ## For NI: Species where only data from S are used
-Spp_selection_S_only <- Spp_selection%>%
-  filter(!is.na(dataUse_direct_SN) & is.na(dataUse_direct_NN))
+Spp_selection_S_only <- Spp_selection %>%
+  filter(dataUse_direct_SN & !dataUse_direct_NN)
 
 ## For NI: Species where data from the whole country are used.
-Spp_selection_HeleNorge <- Spp_selection%>%
-  filter(!is.na(dataUse_direct_N))
+Spp_selection_HeleNorge <- Spp_selection %>%
+  filter(dataUse_direct_N | dataUse_expert_N)
 
 ## For NI: Gallinaceous - Data split into four regions
-Spp_selection_4 <- Spp_selection%>%
-  filter(!is.na(dataUse_four_regions))
+Spp_selection_4 <- Spp_selection %>%
+  filter(dataType == "TBD")
 
 
-## For NI: Subset data to calculate indexes for N and S
+## For NI: Subset TRIM data to calculate indexes for N and S
 Trim_data_N <- Trim_data %>%
   filter(Spp_name %in% Spp_selection_N_S$Species & Regions == 'North') 
 
@@ -145,55 +191,6 @@ Trim_data_grouses <- Trim_data %>%
   filter(Spp_name %in% Spp_selection_4$Species)
 
 
-
-## Write PECBMS arguments input files for each species
-argument_file <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection,
-                                                  folderPath = folder)
-
-## Subset data to contain only relevant species
-PECBMS_data <- makeInputData_PECBMS(Trim_data = Trim_data,
-                                    Spp_selection = Spp_selection,
-                                    convertNA = TRUE, 
-                                    save_allSppData = TRUE, returnData = TRUE)
-
-#------------------#
-# PECBMS Trim runs #
-#------------------#
-
-## Run analyses using the PECBMS Rtrim shell
-runRtrimShell_PECBMS(folder = folder)
-
-
-#-----------------------------#
-# Process PECBMS Trim results #
-#-----------------------------#
-
-## Process results
-trimResults_PECBMS <- processRtrimOutput_PECBMS(folder = folder)
-
-
-#--------------------------------#
-# Post-processing: collect files #
-#--------------------------------#
-
-## Collect (and rename) species and summary files
-collectSpeciesFiles_PECBMS(folder = folder, 
-                           subFolderName = subFolderName)
-
-## Retrieve equivalent file from predecessor monitoring programme (legacy files)
-collectSpeciesFiles_Legacy(origin_folder = legacyFile_folder,
-                           target_folder = paste0(folder, "/", subFolderName))
-
-
-
-
-#------------------------------------------------------------------------------#
-
-#----------------------------------#
-# Preparation for trim for NI      #
-# duplicate code above (from L139) #
-#----------------------------------#
-
 ## Write PECBMS arguments input files for each species by regions of interest to NI
 argument_file_N <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_N_S,
                                                   folderPath = folderN)
@@ -209,7 +206,6 @@ argument_file_HelleNorge <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp
 
 argument_file_Grouse <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_4,
                                                      folderPath = folderGrouse)
-
 
 ## Subset data to contain only relevant species and regions
 NI_data_N <- makeInputData_NI_N(Trim_data = Trim_data_N,
@@ -238,30 +234,25 @@ NI_data_Grouse <- makeInputData_NI_Grouse(Trim_data = Trim_data_grouses,
                               save_allSppData = TRUE, returnData = TRUE)
 
 
-
-
-#-------------------------#
-# NI Trim runs per region #
-#-------------------------#
+#-------------------------------------------#
+# Nature Index: PECBMS Trim runs per region #
+#-------------------------------------------#
 
 ## Run analyses using the PECBMS Rtrim shell
 runRtrimShell_PECBMS(folder = folderN)
 
 runRtrimShell_PECBMS(folder = folderS)
 
-runRtrimShell_PECBMS(folder = folderS_only) # NOTE! Gives a warning about too many sites with no positive observations
+runRtrimShell_PECBMS(folder = folderS_only) 
 
 runRtrimShell_PECBMS(folder = folderHele)
 
-runRtrimShell_PECBMS(folder = folderGrouse) # NOTE! Gives a warning about too many sites with no positive observations
+runRtrimShell_PECBMS(folder = folderGrouse) 
 
 
-
-
-
-#-----------------------------------#
-# Process NI Trim results by region #
-#-----------------------------------#
+#-------------------------------------------------#
+# Nature Index: Process NI Trim results by region #
+#-------------------------------------------------#
 
 ## Process results
 trimResults_NI_N <- processRtrimOutput_PECBMS(folder = folderN)
@@ -274,9 +265,10 @@ trimResults_NI_HeleNorge <- processRtrimOutput_PECBMS(folder = folderHele)
 
 trimResults_NI_Grouse <- processRtrimOutput_PECBMS(folder = folderGrouse)
 
-#--------------------------------#
-# Post-processing: collect files #
-#--------------------------------#
+
+#----------------------------------------------#
+# Nature Index: Post-processing: collect files #
+#----------------------------------------------#
 
 ## Collect (and rename) species and summary files
 collectSpeciesFiles_PECBMS(folder = folderN, 
@@ -293,14 +285,6 @@ collectSpeciesFiles_PECBMS(folder = folderHele,
 
 collectSpeciesFiles_PECBMS(folder = folderGrouse, 
                            subFolderName = subFolderName)
-
-
-#---------------------------------------------#
-# End of calculating indexes by region for NI #
-#---------------------------------------------#
-
-
-#------------------------------------------------------------------------------#
 
 
 
@@ -362,7 +346,7 @@ for(i in 1:2){
 
 ## Calculate long-term and mid-term MSIs for all ecosystems
 useCombTS <- c(TRUE, TRUE, FALSE, FALSE)
-baseYear <- 1996
+baseYear <- 2008
 
 MSI_all <- data.frame()
 for(i in 1:length(IndexNames)){
