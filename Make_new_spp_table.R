@@ -11,7 +11,11 @@ library(read.table)
 
 #sppTable_ALL <- readRDS("C:\\Users\\diego.pavon-jordan\\OneDrive - NINA\\Documents\\NINA ONGOING projects\\2023_Pipeline_for_data_access\\birdIndicators\\data\\species_table_NI.rds")
 
-sppRegions <- read.csv2("data/Hekkefugl_NI2020_SummaryUTF8.csv", dec = '.', sep = ',', header =  T)
+sppRegions <- read.csv2("data/Hekkefugl_NI2020_SummaryUTF8.csv", dec = '.', sep = ',', header =  T) %>%
+  dplyr::mutate(dataUse_expert_N = ifelse(dataUse_direct_N == "Expert", TRUE, FALSE),
+                dataUse_direct_SN = ifelse(dataUse_direct_SN == "x", TRUE, FALSE),
+                dataUse_direct_NN = ifelse(dataUse_direct_NN == "x", TRUE, FALSE),
+                dataUse_direct_N = ifelse(dataUse_direct_N == "x", TRUE, FALSE))
 
 sppTable_ALL <- readRDS("data/species_table.rds")
 
@@ -54,39 +58,17 @@ sppTable_ALL <- sppTable_ALL %>%
 sppTable_ALL_NI <- sppTable_ALL %>%
   left_join(sppRegions)
 
-# Add missing/altered information for grouse species
-grouseSpp <- c("Tetrao tetrix",
-               "Tetrao urogallus",
-               "Lagopus lagopus",
-               "Lagopus muta")
-
-sppTable_ALL_NI <- sppTable_ALL_NI %>%
-  mutate(NI = ifelse(Species %in% grouseSpp, TRUE, NI),
-         StartDataHFT = ifelse(Species %in% grouseSpp, 2008, NA),
-         dataType = ifelse(Species %in% grouseSpp, "TBD", dataType),
-         Nord_Norge = ifelse(Species %in% grouseSpp, "no", Nord_Norge),
-         Sør_Norge = ifelse(Species %in% grouseSpp, "no", Sør_Norge),
-         Norge = ifelse(Species %in% grouseSpp, "no", Norge),
-         Other_areas = ifelse(Species %in% grouseSpp, "yes", Other_areas),
-         indicatorId = dplyr::case_when(indicatorName == "Storfugl" ~ 186,
-                                        indicatorName == "Orrfugl" ~ 384,
-                                        indicatorName == "Lirype" ~ 109,
-                                        indicatorName == "Fjellrype" ~ 53,
-                                        TRUE ~ indicatorId))
-
-sppTable_ALL_NI %>%
-  dplyr::filter(Species %in% grouseSpp)
 
 # Check unmatched entries from sppRegions
 sppRegions$indicatorName[which(!(sppRegions$indicatorName) %in% sppTable_ALL_NI$indicatorName)]
 sppRegions[which(!(sppRegions$indicatorName) %in% sppTable_ALL_NI$indicatorName),]
-# --> Expert-judged species from NI
+# --> Expert-judged species from NI + fossekall
 
 sppTable_ALL_NI %>% filter(Species == 'Pyrrhula pyrrhula')
 
 sppTable_ALL_NI %>% filter(NI == TRUE) %>% print(n=100)
 
-sppTable_ALL_NI %>% filter(dataUse_HeleNorge == 1) %>% print(n=60) #CRN: This column dataUse_HeleNorge is something I also do not have
+sppTable_ALL_NI %>% filter(dataUse_direct_N == 1) %>% print(n=60) #CRN: This column dataUse_HeleNorge is something I do not have, but assuming it's the same as dataUse_direct_N
 
 
 
