@@ -12,6 +12,7 @@ library(xtable)
 library(rtrim)
 library(readxl)
 library(data.table)
+library(NIcalc) # For Nature Index only; manual download from GitHub
 
 #----------------#
 # Workflow setup #
@@ -82,7 +83,7 @@ if(!file.exists(output_folder2)){
 
 ## Download Trim data, incl. EURING codes, from database
 minYear <- 2006
-maxYear <- as.integer(format(Sys.Date(), "%Y"))
+maxYear <- 2024
 
 Trim_data <- downloadData_TRIM(minYear = minYear, maxYear = maxYear,
                                drop_negativeSpp = TRUE)
@@ -316,7 +317,7 @@ writeSchedule_SWAN(working_folder = working_folder_rel,
 ## Truncate first survey year where necessary
 correctFirstSurveyYear_SWAN(general_folder = general_folder_rel, 
                             working_folder = working_folder_rel,
-                            maxYear = as.integer(format(Sys.Date(), "%Y")))
+                            maxYear = maxYear)
 
 #------------------------#
 # PECBMS RSWAN execution #
@@ -334,7 +335,7 @@ combineTimeSeries_SWAN(general_folder_abs = general_folder,
 
 ## Determine data range, base (= reference) year, and changepoint year
 useCombTS <- TRUE
-baseYear <- 1996
+baseYear <- 2000 # Previously 1996
 changepointYear <- 2008
 
 ## Attempt to calculate long-term MSIs for four ecosystems
@@ -377,8 +378,9 @@ for(i in 1:length(IndexNames)){
   message("")
 }
 
+
 ## Save results as .rds
-MSI_results <- list(MSI_baseline1996 = MSI_longTerm,
+MSI_results <- list(MSI_baseline2000 = MSI_longTerm,
                     MSI_baseline2008 = MSI_all)
 
 saveRDS(MSI_results, file = paste0(MSI_results_folder, "/MSI_results.rds"))
@@ -389,9 +391,9 @@ saveRDS(MSI_results, file = paste0(MSI_results_folder, "/MSI_results.rds"))
 #----------------------------------#
 
 ## Plot farmland and forest MSIs with baseline 1996
-plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline1996,
+plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline2000,
                    results_folder = MSI_results_folder,
-                   plot_name = "MSI_base1996_AllEcosystems", 
+                   plot_name = "MSI_base2000_AllEcosystems", 
                    displayPlots = TRUE,
                    savePDF = TRUE)
 
@@ -402,4 +404,65 @@ plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline2008,
         plot_name = "MSI_base2008_AllEcosystems",
         displayPlots = TRUE,
         savePDF = TRUE)
+
+
+#------------------------------------#
+# Nature index indicator calculation #
+#------------------------------------#
+
+## Set parameters
+NI_years <- c(2000, 2010:2014, 2019, 2024)
+refAnchorYear <- 2010 # Reference anchor year
+nsim <- 10000 # Number of simulations for averaging
+
+
+## Register NI database credentials & request token
+UserName_NIdb <- rstudioapi::askForPassword("NI database username") # = NINA email address
+Password_NIdb <- rstudioapi::askForPassword("NI database password")
+
+NIcalc::getToken(username = UserName_NIdb,  
+                 password = Password_NIdb,
+                 url = "https://www8.nina.no/NaturindeksNiCalc")
+
+## Categorise species flagged for NI according to their updating approach
+expertJudge <- c("Acrocephalus schoenobaenus",
+                 "Anthus petrosus",
+                 "Aythya marila",
+                 "Calidris alpina",
+                 "Charadrius morinellus",
+                 "Clangula hyemalis",
+                 "Eremophila alpestris",
+                 "Gallinago media",
+                 "Melanitta fusca",
+                 "Melanitta nigra",
+                 "Phalaropus lobatus",
+                 "Plectrophenax nivalis" 
+                 )
+
+otherUse <- c("Lagopus lagopus", 
+              "Lagopus muta", 
+              "Tetrao tetrix", 
+              "Tetrao urogallus")
+
+directNI <- listSpecies_NI(Spp_selection = Spp_selection,
+                           Spp_exclude = c(expertJudge, otherUse))
+
+
+
+## Assemble and average TRIM data & use it to calculate NI indicator data for each species-area
+IndData <- prepareIndicatorData_NI(directNI = directNI,
+                                   working_folder = working_folder)
+
+
+#TODO: Once we have scripted the subpopulations for TRIM analyses, we have to
+# update the above function to correctly deal with the case of several areas 
+# with distinct values)
+
+#TODO: Once we add the area-specific data, we have to go over 
+# IndData$UpdatedIndicator_data and "merge" the data for different areas of the 
+# same species.
+
+## Write updated indicator data to csv for review
+writeIndicatorData_forReview(UpdatedIndicator_data = IndData$UpdatedIndicator_data,
+                             dir = "NI_indicatorData_forReview")
 
