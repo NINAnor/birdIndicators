@@ -41,6 +41,7 @@ vignettes/*.pdf
 # RDS files
 *.rds
 !data/species_table_NI.rds
+!data/species_table.rds
 
 # PDF plots
 *.pdf
