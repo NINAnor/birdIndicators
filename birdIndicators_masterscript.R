@@ -105,6 +105,13 @@ Trim_data <- Trim_data %>%
                              TRUE ~'North'))
 
 
+
+#****************************************************************************
+#
+# PECBMS MAIN TRIM & SWAN RUNS
+#
+#****************************************************************************
+
 #---------------------------------#
 # Main run: PECBMS Analysis setup #
 #---------------------------------#
@@ -151,143 +158,6 @@ collectSpeciesFiles_PECBMS(folder = folder,
 collectSpeciesFiles_Legacy(origin_folder = legacyFile_folder,
                            target_folder = paste0(folder, "/", subFolderName))
 
-
-
-#-------------------------------------#
-# Nature Index: PECBMS Analysis setup #
-#-------------------------------------#
-
-## For NI: Select species where indexes have to be calculated with data split into N and S datasets
-Spp_selection_N_S <- Spp_selection %>%
-  filter(dataUse_direct_NN & dataUse_direct_SN)
-
-## For NI: Species where only data from S are used
-Spp_selection_S_only <- Spp_selection %>%
-  filter(dataUse_direct_SN & !dataUse_direct_NN)
-
-## For NI: Species where data from the whole country are used.
-Spp_selection_HeleNorge <- Spp_selection %>%
-  filter(dataUse_direct_N | dataUse_expert_N)
-
-## For NI: Gallinaceous - Data split into four regions
-Spp_selection_4 <- Spp_selection %>%
-  filter(dataType == "TBD")
-
-
-## For NI: Subset TRIM data to calculate indexes for N and S
-Trim_data_N <- Trim_data %>%
-  filter(Spp_name %in% Spp_selection_N_S$Species & Regions == 'North') 
-
-Trim_data_S <- Trim_data %>%
-  filter(Spp_name %in% Spp_selection_N_S$Species & Regions == 'South')
-
-Trim_data_S_only <- Trim_data %>%
-  filter(Spp_name %in% Spp_selection_S_only$Species & Regions == 'South')
-
-Trim_data_HeleNorge <- Trim_data %>%
-  filter(Spp_name %in% Spp_selection_HeleNorge$Species)
-
-Trim_data_grouses <- Trim_data %>%
-  filter(Spp_name %in% Spp_selection_4$Species)
-
-
-## Write PECBMS arguments input files for each species by regions of interest to NI
-argument_file_N <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_N_S,
-                                                  folderPath = folderN)
-
-argument_file_S <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_N_S,
-                                                    folderPath = folderS)
-
-argument_file_S_only <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_S_only,
-                                                     folderPath = folderS_only)
-
-argument_file_HelleNorge <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_HeleNorge,
-                                                     folderPath = folderHele)
-
-argument_file_Grouse <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_4,
-                                                     folderPath = folderGrouse)
-
-## Subset data to contain only relevant species and regions
-NI_data_N <- makeInputData_NI_N(Trim_data = Trim_data_N,
-                                    Spp_selection = Spp_selection_N_S,
-                                    convertNA = TRUE, 
-                                    save_allSppData = TRUE, returnData = TRUE)
-
-NI_data_S <- makeInputData_NI_S(Trim_data = Trim_data_S,
-                              Spp_selection = Spp_selection_N_S,
-                              convertNA = TRUE, 
-                              save_allSppData = TRUE, returnData = TRUE)
-
-NI_data_S_only <- makeInputData_NI_S_only(Trim_data = Trim_data_S_only,
-                              Spp_selection = Spp_selection_S_only,
-                              convertNA = TRUE, 
-                              save_allSppData = TRUE, returnData = TRUE)
-
-NI_data_HeleNorge <- makeInputData_NI_HeleNorge(Trim_data = Trim_data_HeleNorge,
-                              Spp_selection = Spp_selection_HeleNorge,
-                              convertNA = TRUE, 
-                              save_allSppData = TRUE, returnData = TRUE)
-
-NI_data_Grouse <- makeInputData_NI_Grouse(Trim_data = Trim_data_grouses,
-                              Spp_selection = Spp_selection_4,
-                              convertNA = TRUE, 
-                              save_allSppData = TRUE, returnData = TRUE)
-
-
-#-------------------------------------------#
-# Nature Index: PECBMS Trim runs per region #
-#-------------------------------------------#
-
-## Run analyses using the PECBMS Rtrim shell
-runRtrimShell_PECBMS(folder = folderN)
-
-runRtrimShell_PECBMS(folder = folderS)
-
-runRtrimShell_PECBMS(folder = folderS_only) 
-
-runRtrimShell_PECBMS(folder = folderHele)
-
-runRtrimShell_PECBMS(folder = folderGrouse) 
-
-
-#-------------------------------------------------#
-# Nature Index: Process NI Trim results by region #
-#-------------------------------------------------#
-
-## Process results
-trimResults_NI_N <- processRtrimOutput_PECBMS(folder = folderN)
-
-trimResults_NI_S <- processRtrimOutput_PECBMS(folder = folderS)
-
-trimResults_NI_S_only <- processRtrimOutput_PECBMS(folder = folderS_only)
-
-trimResults_NI_HeleNorge <- processRtrimOutput_PECBMS(folder = folderHele)
-
-trimResults_NI_Grouse <- processRtrimOutput_PECBMS(folder = folderGrouse)
-
-
-#----------------------------------------------#
-# Nature Index: Post-processing: collect files #
-#----------------------------------------------#
-
-## Collect (and rename) species and summary files
-collectSpeciesFiles_PECBMS(folder = folderN, 
-                           subFolderName = subFolderName)
-
-collectSpeciesFiles_PECBMS(folder = folderS, 
-                           subFolderName = subFolderName)
-
-collectSpeciesFiles_PECBMS(folder = folderS_only, 
-                           subFolderName = subFolderName)
-
-collectSpeciesFiles_PECBMS(folder = folderHele, 
-                           subFolderName = subFolderName)
-
-collectSpeciesFiles_PECBMS(folder = folderGrouse, 
-                           subFolderName = subFolderName)
-
-
-
 #--------------------------#
 # PECBMS RSWAN preparation #
 #--------------------------#
@@ -312,6 +182,12 @@ combineTimeSeries_SWAN(general_folder_abs = general_folder,
                        working_folder_abs = working_folder)
 
 
+
+#****************************************************************************
+#
+# MULTISPECIES INDICES
+#
+#****************************************************************************
 
 #--------------------------------------#
 # Multispecies Index (MSI) calculation #
@@ -389,6 +265,145 @@ plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline2008,
         displayPlots = TRUE,
         savePDF = TRUE)
 
+
+#****************************************************************************
+#
+# NATURE INDEX
+#
+#****************************************************************************
+
+#-------------------------------------#
+# Nature Index: PECBMS Analysis setup #
+#-------------------------------------#
+
+## For NI: Select species where indexes have to be calculated with data split into N and S datasets
+Spp_selection_N_S <- Spp_selection %>%
+  filter(dataUse_direct_NN & dataUse_direct_SN)
+
+## For NI: Species where only data from S are used
+Spp_selection_S_only <- Spp_selection %>%
+  filter(dataUse_direct_SN & !dataUse_direct_NN)
+
+## For NI: Species where data from the whole country are used.
+Spp_selection_HeleNorge <- Spp_selection %>%
+  filter(dataUse_direct_N | dataUse_expert_N)
+
+## For NI: Gallinaceous - Data split into four regions
+Spp_selection_4 <- Spp_selection %>%
+  filter(dataType == "TBD")
+
+
+## For NI: Subset TRIM data to calculate indexes for N and S
+Trim_data_N <- Trim_data %>%
+  filter(Spp_name %in% Spp_selection_N_S$Species & Regions == 'North') 
+
+Trim_data_S <- Trim_data %>%
+  filter(Spp_name %in% Spp_selection_N_S$Species & Regions == 'South')
+
+Trim_data_S_only <- Trim_data %>%
+  filter(Spp_name %in% Spp_selection_S_only$Species & Regions == 'South')
+
+Trim_data_HeleNorge <- Trim_data %>%
+  filter(Spp_name %in% Spp_selection_HeleNorge$Species)
+
+Trim_data_grouses <- Trim_data %>%
+  filter(Spp_name %in% Spp_selection_4$Species)
+
+
+## Write PECBMS arguments input files for each species by regions of interest to NI
+argument_file_N <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_N_S,
+                                                    folderPath = folderN)
+
+argument_file_S <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_N_S,
+                                                    folderPath = folderS)
+
+argument_file_S_only <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_S_only,
+                                                         folderPath = folderS_only)
+
+argument_file_HelleNorge <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_HeleNorge,
+                                                             folderPath = folderHele)
+
+argument_file_Grouse <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_4,
+                                                         folderPath = folderGrouse)
+
+## Subset data to contain only relevant species and regions
+NI_data_N <- makeInputData_NI_N(Trim_data = Trim_data_N,
+                                Spp_selection = Spp_selection_N_S,
+                                convertNA = TRUE, 
+                                save_allSppData = TRUE, returnData = TRUE)
+
+NI_data_S <- makeInputData_NI_S(Trim_data = Trim_data_S,
+                                Spp_selection = Spp_selection_N_S,
+                                convertNA = TRUE, 
+                                save_allSppData = TRUE, returnData = TRUE)
+
+NI_data_S_only <- makeInputData_NI_S_only(Trim_data = Trim_data_S_only,
+                                          Spp_selection = Spp_selection_S_only,
+                                          convertNA = TRUE, 
+                                          save_allSppData = TRUE, returnData = TRUE)
+
+NI_data_HeleNorge <- makeInputData_NI_HeleNorge(Trim_data = Trim_data_HeleNorge,
+                                                Spp_selection = Spp_selection_HeleNorge,
+                                                convertNA = TRUE, 
+                                                save_allSppData = TRUE, returnData = TRUE)
+
+NI_data_Grouse <- makeInputData_NI_Grouse(Trim_data = Trim_data_grouses,
+                                          Spp_selection = Spp_selection_4,
+                                          convertNA = TRUE, 
+                                          save_allSppData = TRUE, returnData = TRUE)
+
+
+#-------------------------------------------#
+# Nature Index: PECBMS Trim runs per region #
+#-------------------------------------------#
+
+## Run analyses using the PECBMS Rtrim shell
+runRtrimShell_PECBMS(folder = folderN)
+
+runRtrimShell_PECBMS(folder = folderS)
+
+runRtrimShell_PECBMS(folder = folderS_only) 
+
+runRtrimShell_PECBMS(folder = folderHele)
+
+runRtrimShell_PECBMS(folder = folderGrouse) 
+
+
+#-------------------------------------------------#
+# Nature Index: Process NI Trim results by region #
+#-------------------------------------------------#
+
+## Process results
+trimResults_NI_N <- processRtrimOutput_PECBMS(folder = folderN)
+
+trimResults_NI_S <- processRtrimOutput_PECBMS(folder = folderS)
+
+trimResults_NI_S_only <- processRtrimOutput_PECBMS(folder = folderS_only)
+
+trimResults_NI_HeleNorge <- processRtrimOutput_PECBMS(folder = folderHele)
+
+trimResults_NI_Grouse <- processRtrimOutput_PECBMS(folder = folderGrouse)
+
+
+#----------------------------------------------#
+# Nature Index: Post-processing: collect files #
+#----------------------------------------------#
+
+## Collect (and rename) species and summary files
+collectSpeciesFiles_PECBMS(folder = folderN, 
+                           subFolderName = subFolderName)
+
+collectSpeciesFiles_PECBMS(folder = folderS, 
+                           subFolderName = subFolderName)
+
+collectSpeciesFiles_PECBMS(folder = folderS_only, 
+                           subFolderName = subFolderName)
+
+collectSpeciesFiles_PECBMS(folder = folderHele, 
+                           subFolderName = subFolderName)
+
+collectSpeciesFiles_PECBMS(folder = folderGrouse, 
+                           subFolderName = subFolderName)
 
 #------------------------------------#
 # Nature index indicator calculation #
