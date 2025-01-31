@@ -15,7 +15,7 @@
 makeSpeciesLists <- function(Trim_data, spp_DataPath = "data"){
   
   ## Read in species table
-  file_sppTable_ALL <- paste0(spp_DataPath, "/species_table.rds")
+  file_sppTable_ALL <- paste0(spp_DataPath, "/species_table_NI.rds")
   sppTable_ALL <- readRDS(file_sppTable_ALL)
   
   
