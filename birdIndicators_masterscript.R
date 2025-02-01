@@ -414,6 +414,7 @@ collectSpeciesFiles_PECBMS(folder = folderGrouse,
 ## Set parameters
 NI_years <- c(2000, 2010:2014, 2019, 2024)
 refAnchorYear <- 2010 # Reference anchor year
+refAnchorYear_alt <- 2019 # Alternative reference anchor year (for indicators without data in 2010)
 nsim <- 10000 # Number of simulations for averaging
 
 
@@ -457,18 +458,15 @@ inputFile_folders <- data.frame(
 )
 
 IndData <- prepareIndicatorData_NI(sppNI = sppNI,
-                                   inputFile_folders = inputFile_folders)
-
-
-#TODO: Once we have scripted the subpopulations for TRIM analyses, we have to
-# update the above function to correctly deal with the case of several areas 
-# with distinct values)
-
-#TODO: Once we add the area-specific data, we have to go over 
-# IndData$UpdatedIndicator_data and "merge" the data for different areas of the 
-# same species.
+                                   inputFile_folders = inputFile_folders,
+                                   use_combTS = TRUE,
+                                   NI_years = NI_years, 
+                                   refAnchorYear = refAnchorYear, 
+                                   refAnchorYear_alt = refAnchorYear_alt,
+                                   nsim = nsim)
 
 ## Write updated indicator data to csv for review
 writeIndicatorData_forReview(UpdatedIndicator_data = IndData$UpdatedIndicator_data,
-                             dir = "NI_indicatorData_forReview")
+                             dir = "NI_indicatorData_forReview",
+                             sppNI = sppNI)
 

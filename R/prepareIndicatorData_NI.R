@@ -1,4 +1,6 @@
-prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS){
+prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS,
+                                    NI_years, refAnchorYear, refAnchorYear_alt,
+                                    nsim){
   
   ## Set up lists for storing data
   TrimIndex_data <- list()
@@ -9,7 +11,7 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS){
   for(i in 1:nrow(sppNI)){
     
     message("")
-    message(paste0("Preparing data for indicator: ", sppNI$Species[i], " (", sppNI$indicatorName[i], ")"))
+    message(crayon::bold(paste0("Preparing data for indicator: ", sppNI$Species[i], " (", sppNI$indicatorName[i], ")")))
     
     ## Download old indicator data from NI database
     message("Retrieving data from NI database...")
@@ -128,13 +130,22 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS){
         TrimIndex_averages_add <- TrimIndex_averages %>%
           dplyr::mutate(areaName = areas[a])
         
+        ## Double-check that reference anchor year is in data (and use alternative if not)
+        if(refAnchorYear %in% TrimIndex_averages_add$Year){
+          refAnchorYear_use <- refAnchorYear
+        }else{
+          refAnchorYear_use <- refAnchorYear_alt
+          message(crayon::cyan("NOTE: Switched to alternative reference anchor year (selected anchor year not in data)."))
+        }
+        
         ## Extract reference proportion for the reference anchor year in the relevant area from old NI data
         refProp_orig <- subset(OldIndicator_data[[i]]$indicatorValues, 
-                               yearName == refAnchorYear & areaName == areas[a])$verdi/100
+                               yearName == refAnchorYear_use & areaName == areas[a])$verdi/100
         
         ## Calculate and add reference value
         message(paste0("Recalibrate reference value for NI database area ", areas[a], "..."))
-        ref <- subset(TrimIndex_averages_add, Year == refAnchorYear) %>%
+        
+        ref <- subset(TrimIndex_averages_add, Year == refAnchorYear_use) %>%
           dplyr::mutate(mean = mean/refProp_orig,
                         sd = sd/refProp_orig,
                         lowerQuart = lowerQuart/refProp_orig,
@@ -187,7 +198,6 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS){
       ## Append
       Indicator_upload <- rbind(Indicator_upload, Indicator_upload_new)
     }
-    
     
     UpdatedIndicator_data[[i]] <- OldIndicator_data[[i]]
     UpdatedIndicator_data[[i]]$indicatorValues <- Indicator_upload
