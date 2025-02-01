@@ -50,8 +50,14 @@ makeSpeciesLists <- function(Trim_data, spp_DataPath = "data"){
     dplyr::select(-minYear)
   
   # TODO: Check with Diego about criteria for setting Year_First and TCF_Slope_From for non-PECBMS species
-  
 
+  ## Check that all listed species exist in Trim data
+  missingSpp <- which(!(Spp_selection$Species %in% Trim_data$Spp_name))
+  if(length(missingSpp) > 0){
+    warning(paste0("The following species do not exist in the Trim data:"))
+    print(Spp_selection$Species[missingSpp])
+  }
+  
   ## List EURING codes for species for different outlets
   sppLists <- list(
     ALL = sppTable_ALL$EURINGCode,
