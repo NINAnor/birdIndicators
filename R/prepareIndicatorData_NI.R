@@ -26,7 +26,7 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS){
     if(subAreas){
       message("Trim analyses at a subnational level (South and North) will be used for updating.")
     }else{
-      messsage("Trim analyses at the national level will be used for updating.")
+      message("Trim analyses at the national level will be used for updating.")
     }
     
     ## Check for availability of (combined) TRIM index data (only for indicators calculated for all of Norway)
@@ -124,15 +124,15 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS){
       
       for(a in 1:areas_count){
         
-        # Add area information to TRIM index data
+        ## Add area information to TRIM index data
         TrimIndex_averages_add <- TrimIndex_averages %>%
           dplyr::mutate(areaName = areas[a])
         
-        # Extract reference proportion for the reference anchor year in the relevant area from old NI data
+        ## Extract reference proportion for the reference anchor year in the relevant area from old NI data
         refProp_orig <- subset(OldIndicator_data[[i]]$indicatorValues, 
                                yearName == refAnchorYear & areaName == areas[a])$verdi/100
         
-        # Calculate and add reference value
+        ## Calculate and add reference value
         message(paste0("Recalibrate reference value for NI database area ", areas[a], "..."))
         ref <- subset(TrimIndex_averages_add, Year == refAnchorYear) %>%
           dplyr::mutate(mean = mean/refProp_orig,
@@ -144,7 +144,7 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS){
         
         TrimIndex_averages_add <- rbind(TrimIndex_averages_add, ref)
         
-        # Do pre-scaling and drop values not relevant for upload to NI database
+        ## Do pre-scaling and drop values not relevant for upload to NI database
         message(paste0("Scale and format updated indicator data for NI database area ", areas[a], "..."))
         Indicator_prescaled_areas[[a]] <- TrimIndex_averages_add %>%
           dplyr::mutate(mean = 100*mean/ref$mean,
@@ -161,6 +161,7 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS){
       
       # Write updated indicator data in upload format
       Indicator_upload_new <- OldIndicator_data[[i]]$indicatorValues %>%
+        dplyr::filter(areaName %in% Indicator_prescaled$areaName) %>%
         dplyr::left_join(Indicator_prescaled, by =c("yearName", "areaName")) %>%
         dplyr::mutate(update = ifelse(is.na(mean), FALSE, TRUE)) %>%
         dplyr::mutate(
