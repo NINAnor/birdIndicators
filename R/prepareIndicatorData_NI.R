@@ -23,10 +23,11 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS){
     ## Check whether TRIM data have been divided into sub-areas
     subAreas <- ifelse(sppNI$dataUse_direct_N[i] | sppNI$dataUse_expert_N[i], FALSE, TRUE)
     
-    #if(length(areas) > 1 & subAreas){
-    #  message("Distinct indicator data has to be reported for mulitple areas. Functionality for this is not implemented yet, but will be added soon. For now, this indicator will be skipped.")
-    #  next()
-    #}
+    if(subAreas){
+      message("Trim analyses at a subnational level (South and North) will be used for updating.")
+    }else{
+      messsage("Trim analyses at the national level will be used for updating.")
+    }
     
     ## Check for availability of (combined) TRIM index data (only for indicators calculated for all of Norway)
     if(use_combTS & sppNI$StartDataHFT[i] == 1996){
@@ -35,6 +36,12 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS){
       combTS <- ifelse(any(grepl(paste0("COMB_", sppNI$EURINGCode[i], "_"), spp_files)), TRUE, FALSE)
     }else{
       combTS <- FALSE
+    }
+    
+    if(combTS){
+      message("Using combined Trim time series (start 1996).")
+    }else{
+      message("Using TOV-E Trim time series (start 2008).")
     }
     
     ## Count number of areas with separate TRIM data
