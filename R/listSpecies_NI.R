@@ -20,8 +20,9 @@ listSpecies_NI <- function(Spp_selection, Spp_exclude){
     dplyr::filter(NI & !(Species %in% Spp_exclude)) %>%
     dplyr::select(EURINGCode, Species, indicatorName, indicatorId, dataType,
                   dataUse_direct_SN, dataUse_direct_NN, dataUse_direct_N,
-                  dataUse_expert_N) %>%
-    dplyr::rename(dataType_NI2020 = dataType)
+                  dataUse_expert_N, StartDataHFT) %>%
+    dplyr::rename(dataType_NI2020 = dataType) %>%
+    dplyr::mutate(StartDataHFT = ifelse(StartDataHFT == "1996", 1996, 2008))
   
   
   ## Add Norwegian names as per NI database for Nature index species

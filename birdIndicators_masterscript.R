@@ -443,8 +443,21 @@ sppNI <- listSpecies_NI(Spp_selection = Spp_selection,
 
 
 ## Assemble and average TRIM data & use it to calculate NI indicator data for each species-area
+inputFile_folders <- data.frame(
+  ID = c("PECBMS",
+         "NI_Norge",
+         "NI_NNorge",
+         "NI_SNorge",
+         "NI_onlySNorge"),
+  path = c(working_folder_rel,
+           paste0(folderHele, "/Species_files"),
+           paste0(folderN, "/Species_files"),
+           paste0(folderS, "/Species_files"),
+           paste0(folderS_only, "/Species_files"))
+)
+
 IndData <- prepareIndicatorData_NI(sppNI = sppNI,
-                                   working_folder = working_folder)
+                                   inputFile_folders = inputFile_folders)
 
 
 #TODO: Once we have scripted the subpopulations for TRIM analyses, we have to
