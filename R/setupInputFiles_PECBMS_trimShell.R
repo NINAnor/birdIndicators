@@ -20,7 +20,7 @@ setupInputFiles_PECBMS_trimShell <- function(Spp_selection, folderPath){
   ## Add the species-specific starting year ("Year_from" variable)
   Spp_selection <- Spp_selection %>%
     dplyr::mutate(Year_from = dplyr::case_when(Year_First %in% c(2006, 2007) ~ 2007,
-                                               Year_First == 2008 ~ 2008))
+                                               Year_First >= 2008 ~ Year_First))
 
   ## Check for other starting years
   if(any(is.na(Spp_selection$Year_from))){
@@ -40,6 +40,11 @@ setupInputFiles_PECBMS_trimShell <- function(Spp_selection, folderPath){
     Year_from = Spp_selection$Year_from,
     Save_fitted_values = "TRUE"
   ) 
+  
+  ## Adjust base year for cases that have no data in/prior to 2008
+  argument_file <- argument_file %>%
+    dplyr::mutate(Base_year_first_year = ifelse(Base_year_first_year < Year_from, Year_from, Base_year_first_year),
+                  Base_year_last_year = ifelse(Base_year_last_year < Year_from, Year_from, Base_year_last_year))
   
   ## Create directory for saving files if neccessary
   if(!dir.exists(folderPath)){dir.create(folderPath)}
