@@ -20,6 +20,46 @@ sppRegions <- read.csv2("data/Hekkefugl_NI2020_SummaryUTF8.csv", dec = '.', sep 
 sppTable_ALL <- readRDS("data/species_table.rds")
 
 sppTable_ALL # from 'makeSpeciesLists.R'
+
+# Add missing NI species (Cinclus cinclus and expert-judged species)
+expertJudge <- c("Acrocephalus schoenobaenus",
+                 "Anthus petrosus",
+                 "Aythya marila",
+                 "Calidris alpina",
+                 "Charadrius morinellus",
+                 "Clangula hyemalis",
+                 "Eremophila alpestris",
+                 "Gallinago media",
+                 "Melanitta fusca",
+                 "Melanitta nigra",
+                 "Phalaropus lobatus",
+                 "Plectrophenax nivalis")
+
+expertJudge <- expertJudge[which(!(expertJudge %in% sppTable_ALL$Species))]
+
+sppTable_additions <- tibble(
+  EURINGCode = c(10500, # Cinclus cinclus
+                 12430, # Acrocephalus schoenobaenus
+                 10142, # Anthus petrosus
+                 2040, # Aythya marila
+                 5120, # Calidris alpina
+                 4820, # Charadrius morinellus
+                 2120, # Clangula hyemalis
+                 9780, # Eremophila alpestris
+                 5200, # Gallinago media
+                 2150, # Melanitta fusca
+                 2130, # Melanitta nigra
+                 5640), # Phalaropus lobatus
+  Species = c("Cinclus cinclus", expertJudge),
+  WEBSITE = c(TRUE, rep(FALSE, length(expertJudge))),
+  MSI = FALSE,
+  PECBMS = FALSE,
+  NI = TRUE
+)
+
+sppTable_ALL <- sppTable_ALL %>%
+  dplyr::bind_rows(sppTable_additions)
+
 sppTable_ALL %>% filter(Species == 'Pyrrhula pyrrhula')
 #sppRegions %>% filter(Species == 'Pyrrhula pyrrhula') #CRN: There is no species column in sppRegions
 
@@ -50,7 +90,8 @@ sppTable_ALL <- sppTable_ALL %>%
                                                  Species == "Sylvia curruca" ~ "Møller",
                                                  Species == "Carduelis chloris" ~ "Grønnfink",
                                                  Species == "Carduelis spinus" ~ "Grønnsisik",
-                                                 Species == "Carduelis flammea" ~ "Gråsisik"))
+                                                 Species == "Carduelis flammea" ~ "Gråsisik",
+                                                 Species == "Charadrius morinellus" ~ "Boltit"))
 
 
 
@@ -62,19 +103,19 @@ sppTable_ALL_NI <- sppTable_ALL %>%
 # Check unmatched entries from sppRegions
 sppRegions$indicatorName[which(!(sppRegions$indicatorName) %in% sppTable_ALL_NI$indicatorName)]
 sppRegions[which(!(sppRegions$indicatorName) %in% sppTable_ALL_NI$indicatorName),]
-# --> Expert-judged species from NI + fossekall
+# --> All species have a match
 
 sppTable_ALL_NI %>% filter(Species == 'Pyrrhula pyrrhula')
 
 sppTable_ALL_NI %>% filter(NI == TRUE) %>% print(n=100)
 
-sppTable_ALL_NI %>% filter(dataUse_direct_N == 1) %>% print(n=60) #CRN: This column dataUse_HeleNorge is something I do not have, but assuming it's the same as dataUse_direct_N
+sppTable_ALL_NI %>% filter(dataUse_direct_N) %>% print(n=60) #CRN: This column dataUse_HeleNorge is something I do not have, but assuming it's the same as dataUse_direct_N
 
 
 
 #saveRDS(sppTable_ALL_NI, 'C:\\Users\\diego.pavon-jordan\\OneDrive - NINA\\Documents\\NINA ONGOING projects\\2023_Pipeline_for_data_access\\birdIndicators\\data\\species_table_NI.rds')
 saveRDS(sppTable_ALL_NI, file = "data/species_table_NI.rds")
-
+readr::write_excel_csv(sppTable_ALL_NI, file = "data/species_table_NI.csv")
 
 # Now, the table with the species information is updated and contains the
 # four grouse species and the info on which regions to use.

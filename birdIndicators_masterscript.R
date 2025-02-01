@@ -41,11 +41,8 @@ folderS_only <- "NI_regions_files/Species_filesS_only"
 folderGrouse <- "NI_regions_files/Species_files_Grouse"
 folderHele <- "NI_regions_files/Species_files_HeleNorge"
 
-
 # Storage of processed PECBMS Trim outputs
 subFolderName <- "Species_files" 
-
-
 
 # Relative general and working folders for RSWAN
 general_folder_rel <- "data"
@@ -69,9 +66,6 @@ working_folder <- paste0(getwd(), "/", working_folder_rel)
 output_folder <- paste0(working_folder, "/output/") 
 output_folder2 <- paste0(working_folder, "/output") 
 
-if(!file.exists(output_folder2)){ 
-  dir.create(output_folder2)
-}
 # NOTE: The RSWAN scripts require that absolute folder paths are assigned to 
 # objects strictly named "general_folder", "working_folder", and "output_folder"
 # because some of the RSWAN helper functions use setwd() calls that refer to 
@@ -116,9 +110,13 @@ Trim_data <- Trim_data %>%
 # Main run: PECBMS Analysis setup #
 #---------------------------------#
 
-## Get species lists
+## Get species lists (and save as file)
 sppLists <- makeSpeciesLists(Trim_data = Trim_data)
-Spp_selection <- sppLists$sppData
+saveRDS(sppLists, file = "data/sppLists.rds")
+
+## Make species selection for main PECBMS runs
+Spp_selection <- sppLists$sppData %>%
+  dplyr::filter(WEBSITE)
 
 ## Write PECBMS arguments input files for each species
 argument_file <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection,
@@ -161,6 +159,11 @@ collectSpeciesFiles_Legacy(origin_folder = legacyFile_folder,
 #--------------------------#
 # PECBMS RSWAN preparation #
 #--------------------------#
+
+## Make sub-directory if not already present
+if(!file.exists(output_folder2)){ 
+  dir.create(output_folder2)
+}
 
 ## Write/load schedule table
 writeSchedule_SWAN(working_folder = working_folder_rel, 
@@ -277,21 +280,20 @@ plotTimeSeries_MSI(MSI = MSI_results$MSI_baseline2008,
 #-------------------------------------#
 
 ## For NI: Select species where indexes have to be calculated with data split into N and S datasets
-Spp_selection_N_S <- Spp_selection %>%
+Spp_selection_N_S <- sppLists$sppData %>%
   filter(dataUse_direct_NN & dataUse_direct_SN)
 
 ## For NI: Species where only data from S are used
-Spp_selection_S_only <- Spp_selection %>%
+Spp_selection_S_only <- sppLists$sppData %>%
   filter(dataUse_direct_SN & !dataUse_direct_NN)
 
 ## For NI: Species where data from the whole country are used.
-Spp_selection_HeleNorge <- Spp_selection %>%
+Spp_selection_HeleNorge <- sppLists$sppData %>%
   filter(dataUse_direct_N | dataUse_expert_N)
 
 ## For NI: Gallinaceous - Data split into four regions
-Spp_selection_4 <- Spp_selection %>%
+Spp_selection_4 <- sppLists$sppData %>%
   filter(dataType == "TBD")
-
 
 ## For NI: Subset TRIM data to calculate indexes for N and S
 Trim_data_N <- Trim_data %>%
@@ -320,7 +322,7 @@ argument_file_S <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selectio
 argument_file_S_only <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_S_only,
                                                          folderPath = folderS_only)
 
-argument_file_HelleNorge <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_HeleNorge,
+argument_file_HeleNorge <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_HeleNorge,
                                                              folderPath = folderHele)
 
 argument_file_Grouse <- setupInputFiles_PECBMS_trimShell(Spp_selection = Spp_selection_4,
@@ -435,8 +437,7 @@ expertJudge <- c("Acrocephalus schoenobaenus",
                  "Melanitta fusca",
                  "Melanitta nigra",
                  "Phalaropus lobatus",
-                 "Plectrophenax nivalis" 
-                 )
+                 "Plectrophenax nivalis")
 
 otherUse <- c("Lagopus lagopus", 
               "Lagopus muta", 
