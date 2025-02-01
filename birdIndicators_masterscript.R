@@ -425,32 +425,25 @@ NIcalc::getToken(username = UserName_NIdb,
                  password = Password_NIdb,
                  url = "https://www8.nina.no/NaturindeksNiCalc")
 
+## Re-load species list if not present
+if(!exists("sppLists")){
+  sppLists <- readRDS("data/sppLists.rds")
+}
+Spp_selection <- sppLists$sppData
+
 ## Categorise species flagged for NI according to their updating approach
-expertJudge <- c("Acrocephalus schoenobaenus",
-                 "Anthus petrosus",
-                 "Aythya marila",
-                 "Calidris alpina",
-                 "Charadrius morinellus",
-                 "Clangula hyemalis",
-                 "Eremophila alpestris",
-                 "Gallinago media",
-                 "Melanitta fusca",
-                 "Melanitta nigra",
-                 "Phalaropus lobatus",
-                 "Plectrophenax nivalis")
+expertJudge <- Spp_selection$Species[which(Spp_selection$dataUse_expert_N)]
 
-otherUse <- c("Lagopus lagopus", 
-              "Lagopus muta", 
-              "Tetrao tetrix", 
-              "Tetrao urogallus")
+otherUse <- Spp_selection$Species[which(Spp_selection$dataType == "TBD")]
 
-directNI <- listSpecies_NI(Spp_selection = Spp_selection,
-                           Spp_exclude = c(expertJudge, otherUse))
+## List species relevant for upload to NI database (directly or via expert assessment)
+sppNI <- listSpecies_NI(Spp_selection = Spp_selection,
+                        Spp_exclude = otherUse)
 
 
 
 ## Assemble and average TRIM data & use it to calculate NI indicator data for each species-area
-IndData <- prepareIndicatorData_NI(directNI = directNI,
+IndData <- prepareIndicatorData_NI(sppNI = sppNI,
                                    working_folder = working_folder)
 
 

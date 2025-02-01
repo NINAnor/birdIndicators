@@ -48,6 +48,7 @@ vignettes/*.pdf
 
 # CSV files
 *.csv
+!data/NorwegianSppNames.csv
 
 # Excel files
 *.xlsx 
