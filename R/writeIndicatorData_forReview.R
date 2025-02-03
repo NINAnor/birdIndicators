@@ -3,7 +3,7 @@
 #' @param dir character. Name of directory into which to save CSV files.
 #' @param UpdatedIndicator_data a list containing updated indicator data ready
 #' formatted for upload to NI database. 
-#' @param sppNI table containing information on species included in NI.
+#' @param sppNI a table containing information on species included in NI.
 #'
 #' @return one .csv file per species within the specified directory containing
 #' updated indicator data ready for review. 
