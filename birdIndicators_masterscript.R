@@ -442,8 +442,14 @@ sppNI <- listSpecies_NI(Spp_selection = Spp_selection,
                         Spp_exclude = otherUse)
 
 
+## Download old indicator data from NI database and store as a list
+OldIndicator_data <- list()
+for(i in 1:nrow(sppNI)){
+  OldIndicator_data[[i]] <- NIcalc::getIndicatorValues(indicatorID = sppNI$indicatorId[i])
+}
+names(OldIndicator_data) <- sppNI$indicatorId
 
-## Assemble and average TRIM data & use it to calculate NI indicator data for each species-area
+## List potentially relevant input file folders
 inputFile_folders <- data.frame(
   ID = c("PECBMS",
          "NI_Norge",
@@ -457,16 +463,24 @@ inputFile_folders <- data.frame(
            paste0(folderS_only, "/Species_files"))
 )
 
-IndData <- prepareIndicatorData_NI(sppNI = sppNI,
-                                   inputFile_folders = inputFile_folders,
-                                   use_combTS = TRUE,
-                                   NI_years = NI_years, 
-                                   refAnchorYear = refAnchorYear, 
-                                   refAnchorYear_alt = refAnchorYear_alt,
-                                   nsim = nsim)
+## Determine "updating plan" (which Trim file for which NI area) for all species
+updatePlans <- makeUpdatePlan_NI(sppNI = sppNI,
+                                 OldIndicator_data = OldIndicator_data)
+
+
+## Assemble and average TRIM data & use it to calculate NI indicator data for each species-area
+UpdatedIndicator_data <- prepareIndicatorData_NI(sppNI = sppNI,
+                                                 OldIndicator_data = OldIndicator_data,
+                                                 updatePlans = updatePlans,
+                                                 inputFile_folders = inputFile_folders,
+                                                 use_combTS = TRUE,
+                                                 NI_years = NI_years, 
+                                                 refAnchorYear = refAnchorYear, 
+                                                 refAnchorYear_alt = refAnchorYear_alt,
+                                                 nsim = nsim)
 
 ## Write updated indicator data to csv for review
-writeIndicatorData_forReview(UpdatedIndicator_data = IndData$UpdatedIndicator_data,
+writeIndicatorData_forReview(UpdatedIndicator_data = UpdatedIndicator_data,
                              dir = "NI_indicatorData_forReview",
                              sppNI = sppNI)
 

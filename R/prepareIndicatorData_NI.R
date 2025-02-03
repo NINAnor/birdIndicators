@@ -1,10 +1,38 @@
-prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS,
+#' Prepare updated NI indicator data based on (area-specific) Trim analysis outputs
+#'
+#' @param sppNI a table containing information on species included in NI.
+#' @param OldIndicator_data a list containing the NI indicator data currently 
+#' stored in the NI database for each species in `sppNI`. 
+#' @param updatePlans a list containing one table per species detailing which
+#' Trim analysis output (area) should be used to update NI indicator values for
+#' each area in the NI database. Output of makeUpdatePlan_NI(). 
+#' @param inputFile_folders a data frame storing information on the filepaths
+#' for the different subsets of Trim analysis outputs.
+#' @param use_combTS logical. If TRUE, uses combined Trim time series (RSWAN runs)
+#' if available for the selected species. This is so far only implemented for 
+#' species for which Trim analyses are run at the national level (the sub-national
+#' level Trim analyses do not include the RSWAN steps as per now).
+#' @param NI_years a vector of years for which to calculate NI indicator values.
+#' @param refAnchorYear integer. Which year in the current NI indicator data to 
+#' use as the base for re-calibrating the references state. 
+#' @param refAnchorYear_alt integer. Alternative year to use as a base for re-
+#' calibrating reference state. Gets used if `refAnchorYear` is not present in 
+#' Trim data. 
+#' @param nsim integer. Number of simulations to run for calculating indicator
+#' values as 3-year averages of Trim indices.  
+#'
+#' @returns a list containing updated NI indicator data for each species in `sppNI`.
+#' Ready formatted for upload to NI database. 
+#' @export
+#'
+#' @examples
+
+prepareIndicatorData_NI <- function(sppNI, OldIndicator_data, updatePlans,
+                                    inputFile_folders, use_combTS,
                                     NI_years, refAnchorYear, refAnchorYear_alt,
                                     nsim){
   
-  ## Set up lists for storing data
-  TrimIndex_data <- list()
-  OldIndicator_data <- list()
+  ## Set up list for storing data
   UpdatedIndicator_data <- list()
   
   
@@ -13,24 +41,16 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS,
     message("")
     message(crayon::bold(paste0("Preparing data for indicator: ", sppNI$Species[i], " (", sppNI$indicatorName[i], ")")))
     
-    ## Download old indicator data from NI database
-    message("Retrieving data from NI database...")
-    OldIndicator_data[[i]] <- NIcalc::getIndicatorValues(indicatorID = sppNI$indicatorId[i])
-    
     ## Check areas used in NI database
-    areas <- unique(OldIndicator_data[[i]]$indicatorValues$areaName)
-    message("NI database contains the following ", length(areas), " area(s):")
-    print(areas)
+    NI_areas <- updatePlans[[i]]$NI_areas
+    message("NI database contains the following ", length(NI_areas), " area(s):")
+    print(NI_areas)
     
-    ## Check whether TRIM data have been divided into sub-areas
-    subAreas <- ifelse(sppNI$dataUse_direct_N[i] | sppNI$dataUse_expert_N[i], FALSE, TRUE)
-    
-    if(subAreas){
-      message("Trim analyses at a subnational level (South and North) will be used for updating.")
-    }else{
-      message("Trim analyses at the national level will be used for updating.")
-    }
-    
+    ## Check sub-areas of TRIM data to be used
+    Trim_subAreas <- unique(updatePlans[[i]]$Trim_areaMatch)
+    message(paste0("Trim analyses for the following (sub-)area(s) will be used for updating:"))
+    print(Trim_subAreas)
+
     ## Check for availability of (combined) TRIM index data (only for indicators calculated for all of Norway)
     if(use_combTS & sppNI$StartDataHFT[i] == 1996){
       source_folder_COMB <- subset(inputFile_folders, ID == "PECBMS")$path
@@ -46,29 +66,24 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS,
       message("Using TOV-E Trim time series (start 2008).")
     }
     
-    ## Count number of areas with separate TRIM data
-    if(sppNI$dataUse_direct_SN[i] & sppNI$dataUse_direct_NN[i] & length(areas) > 1){
-      areas_Trim <- c("Sør-Norge", "Nord-Norge")
-    }else{
-      areas_Trim <- ifelse(sppNI$dataUse_direct_SN[i] & !sppNI$dataUse_direct_NN[i], "Sør-Norge", "Norge")
-    }
-    
-    nAreas_Trim <- length(areas_Trim)
     
     ## Set up dataframe for temporarily storing area-specific indicator data
     Indicator_upload <- data.frame()
     
-    
-    for(x in 1:nAreas_Trim){
+    for(x in 1:nrow(updatePlans[[i]])){
+      
+      ## Extract active area names
+      NI_area_x <- as.character(updatePlans[[i]][x, "NI_areas"])
+      Trim_area_x <- as.character(updatePlans[[i]][x, "Trim_areaMatch"])
+      
       
       ## List files from relevant folder
       source_folder <- dplyr::case_when(
         combTS ~ subset(inputFile_folders, ID == "PECBMS")$path,
-        sppNI$dataUse_expert_N[i] ~ subset(inputFile_folders, ID == "NI_Norge")$path,
-        sppNI$dataUse_direct_N[i] ~ subset(inputFile_folders, ID == "NI_Norge")$path,
-        sppNI$dataUse_direct_SN[i] & !sppNI$dataUse_direct_NN[i] ~ subset(inputFile_folders, ID == "NI_onlySNorge")$path,
-        areas_Trim[x] == "Sør-Norge" ~ subset(inputFile_folders, ID == "NI_SNorge")$path,
-        areas_Trim[x] == "Nord-Norge" ~ subset(inputFile_folders, ID == "NI_NNorge")$path
+        Trim_area_x == "Norge" ~ subset(inputFile_folders, ID == "NI_Norge")$path,
+        Trim_area_x == "Sør-Norge" & nrow(updatePlans[[i]]) == 1 ~ subset(inputFile_folders, ID == "NI_onlySNorge")$path,
+        Trim_area_x == "Sør-Norge" & nrow(updatePlans[[i]]) > 1 ~ subset(inputFile_folders, ID == "NI_SNorge")$path,
+        Trim_area_x == "Nord-Norge" ~ subset(inputFile_folders, ID == "NI_NNorge")$path
       )
       
       if(is.na(source_folder)){
@@ -81,7 +96,7 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS,
       
       
       ## Load relevant TRIM index data 
-      message(paste0("Loading TRIM index data for area: ", areas_Trim[x]))
+      message(paste0("Loading TRIM index data for area: ", Trim_area_x))
       if(combTS){
         index_TS_file <- spp_files[which(grepl(paste0("COMB_", sppNI$EURINGCode[i], "_"), spp_files) & grepl("indices_TT", spp_files))]
       }else{
@@ -92,25 +107,25 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS,
         stop("Identification of correct TRIM index data file failed. Check presence of file and detection criteria.")
       }
       
-      TrimIndex_data[[i]] <- read.csv(paste0(source_folder, "/", index_TS_file), sep = ";")
+      TrimIndex_data <- read.csv(paste0(source_folder, "/", index_TS_file), sep = ";")
       
       ## Calculate 3-year averages for TRIM index data
       message("Calculating 3-year averages for TRIM data...")
       TrimIndex_averages <- data.frame()
       
-      for(t in 3:nrow(TrimIndex_data[[i]])){
+      for(t in 3:nrow(TrimIndex_data)){
         idx <- matrix(NA, nrow = nsim, ncol = 3)
         
         for(s in 1:3){
           idx[, s] <- truncnorm::rtruncnorm(n = nsim, 
-                                            mean = TrimIndex_data[[i]]$Index_model[t-(s-1)],
-                                            sd = TrimIndex_data[[i]]$Index_model_SE[t-(s-1)],
+                                            mean = TrimIndex_data$Index_model[t-(s-1)],
+                                            sd = TrimIndex_data$Index_model_SE[t-(s-1)],
                                             a = 0)
         }
         
         avg_3yr <- rowMeans(idx)
         
-        avg_data <- data.frame(Year = TrimIndex_data[[i]]$Year[t],
+        avg_data <- data.frame(Year = TrimIndex_data$Year[t],
                                mean = mean(avg_3yr),
                                sd = sd(avg_3yr),
                                lowerQuart = unname(quantile(avg_3yr, probs = 0.25)),
@@ -119,61 +134,46 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS,
         TrimIndex_averages <- rbind(TrimIndex_averages, avg_data)
       }
       
-      Indicator_prescaled_areas <- list()
-      
-      ## Determine whether we need to use the same Trim data for setting values for multiple areas
-      areas_count <- ifelse(nAreas_Trim == 1 & length(areas) > 1, length(areas), 1)
-      
-      for(a in 1:areas_count){
-        
-        ## Add area information to TRIM index data
-        TrimIndex_averages_add <- TrimIndex_averages %>%
-          dplyr::mutate(areaName = areas[a])
-        
-        ## Double-check that reference anchor year is in data (and use alternative if not)
-        if(refAnchorYear %in% TrimIndex_averages_add$Year){
-          refAnchorYear_use <- refAnchorYear
-        }else{
-          refAnchorYear_use <- refAnchorYear_alt
-          message(crayon::cyan("NOTE: Switched to alternative reference anchor year (selected anchor year not in data)."))
-        }
-        
-        ## Extract reference proportion for the reference anchor year in the relevant area from old NI data
-        refProp_orig <- subset(OldIndicator_data[[i]]$indicatorValues, 
-                               yearName == refAnchorYear_use & areaName == areas[a])$verdi/100
-        
-        ## Calculate and add reference value
-        message(paste0("Recalibrate reference value for NI database area ", areas[a], "..."))
-        
-        ref <- subset(TrimIndex_averages_add, Year == refAnchorYear_use) %>%
-          dplyr::mutate(mean = mean/refProp_orig,
-                        sd = sd/refProp_orig,
-                        lowerQuart = lowerQuart/refProp_orig,
-                        upperQuart = upperQuart/refProp_orig, 
-                        areaName = areas[a])
-        ref[,"Year"] <- "Referanseverdi"
-        
-        TrimIndex_averages_add <- rbind(TrimIndex_averages_add, ref)
-        
-        ## Do pre-scaling and drop values not relevant for upload to NI database
-        message(paste0("Scale and format updated indicator data for NI database area ", areas[a], "..."))
-        Indicator_prescaled_areas[[a]] <- TrimIndex_averages_add %>%
-          dplyr::mutate(mean = 100*mean/ref$mean,
-                        sd = 100*sd/ref$mean,
-                        lowerQuart = 100*lowerQuart/ref$mean,
-                        upperQuart = 100*upperQuart/ref$mean) %>%
-          dplyr::filter(Year %in% c("Referanseverdi", NI_years)) %>%
-          dplyr::rename(yearName = Year)
+      ## Double-check that reference anchor year is in data (and use alternative if not)
+      if(refAnchorYear %in% TrimIndex_averages$Year){
+        refAnchorYear_use <- refAnchorYear
+      }else{
+        refAnchorYear_use <- refAnchorYear_alt
+        message(crayon::cyan("NOTE: Switched to alternative reference anchor year (selected anchor year not in data)."))
       }
       
-      # Write list as a dataframe
-      Indicator_prescaled <- dplyr::bind_rows(Indicator_prescaled_areas)
+      ## Extract reference proportion for the reference anchor year in the relevant area from old NI data
+      refProp_orig <- subset(OldIndicator_data[[i]]$indicatorValues, 
+                             yearName == refAnchorYear_use & areaName == NI_area_x)$verdi/100
+      
+      ## Calculate and add reference value
+      message(paste0("Recalibrate reference value for NI database area ", NI_area_x, "..."))
+      
+      ref <- subset(TrimIndex_averages, Year == refAnchorYear_use) %>%
+        dplyr::mutate(mean = mean/refProp_orig,
+                      sd = sd/refProp_orig,
+                      lowerQuart = lowerQuart/refProp_orig,
+                      upperQuart = upperQuart/refProp_orig)
+      ref[,"Year"] <- "Referanseverdi"
+      
+      TrimIndex_averages <- rbind(TrimIndex_averages, ref)
+      
+      ## Do pre-scaling and drop values not relevant for upload to NI database
+      message(paste0("Scale and format updated indicator data for NI database area ", NI_area_x, "..."))
+      Indicator_prescaled <- TrimIndex_averages %>%
+        dplyr::mutate(mean = 100*mean/ref$mean,
+                      sd = 100*sd/ref$mean,
+                      lowerQuart = 100*lowerQuart/ref$mean,
+                      upperQuart = 100*upperQuart/ref$mean) %>%
+        dplyr::filter(Year %in% c("Referanseverdi", NI_years)) %>%
+        dplyr::rename(yearName = Year)
+
       row.names(Indicator_prescaled) <- NULL
       
       # Write updated indicator data in upload format
       Indicator_upload_new <- OldIndicator_data[[i]]$indicatorValues %>%
-        dplyr::filter(areaName %in% Indicator_prescaled$areaName) %>%
-        dplyr::left_join(Indicator_prescaled, by =c("yearName", "areaName")) %>%
+        dplyr::filter(areaName == NI_area_x) %>%
+        dplyr::left_join(Indicator_prescaled, by = "yearName") %>%
         dplyr::mutate(update = ifelse(is.na(mean), FALSE, TRUE)) %>%
         dplyr::mutate(
           
@@ -208,10 +208,6 @@ prepareIndicatorData_NI <- function(sppNI, inputFile_folders, use_combTS,
     }
   }
   
-  # Collate and return data
-  results <- list(TrimIndex_data = TrimIndex_data,
-                  OldIndicator_data = OldIndicator_data,
-                  UpdatedIndicator_data = UpdatedIndicator_data)
-  
-  return(results)
+  # Return data
+  return(UpdatedIndicator_data)
 }
