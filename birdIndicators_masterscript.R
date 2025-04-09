@@ -412,7 +412,7 @@ collectSpeciesFiles_PECBMS(folder = folderGrouse,
 #------------------------------------#
 
 ## Set parameters
-NI_years <- c(2000, 2010:2014, 2019, 2024)
+NI_years <- c(2000, 2010, 2014, 2019, 2024)
 refAnchorYear <- 2010 # Reference anchor year
 refAnchorYear_alt <- 2019 # Alternative reference anchor year (for indicators without data in 2010)
 nsim <- 10000 # Number of simulations for averaging
@@ -484,3 +484,19 @@ writeIndicatorData_forReview(UpdatedIndicator_data = UpdatedIndicator_data,
                              dir = "NI_indicatorData_forReview",
                              sppNI = sppNI)
 
+## Upload updated indicator data for select species to NI database
+
+indicatorId_upload <- c(278, 289, 301, 305, 308, 313, 314, 317, 318, 325, 326, 
+                        328, 330, 335, 389, 392:403, 405:410, 412, 414, 415 )
+
+
+for(i in 1:length(UpdatedIndicator_data)){
+  
+  if(names(UpdatedIndicator_data)[i] %in% indicatorId_upload){
+    message(paste0("Upload data for indicator: ", names(UpdatedIndicator_data)[i]))
+    NIcalc::writeIndicatorValues(UpdatedIndicator_data[[i]])
+  }else{
+    message(paste0("Skipping indicator: ", names(UpdatedIndicator_data)[i]))
+  }
+
+}  

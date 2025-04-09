@@ -209,5 +209,6 @@ prepareIndicatorData_NI <- function(sppNI, OldIndicator_data, updatePlans,
   }
   
   # Return data
+  names(UpdatedIndicator_data) <- names(OldIndicator_data)
   return(UpdatedIndicator_data)
 }
